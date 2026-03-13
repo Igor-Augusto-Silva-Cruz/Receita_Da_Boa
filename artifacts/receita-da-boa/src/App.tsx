@@ -18,11 +18,10 @@ window.fetch = async (input: RequestInfo | URL, init?: RequestInit) => {
   if (url.includes('/api/')) {
     const token = localStorage.getItem('receita_token');
     if (token) {
-      init = init || {};
-      init.headers = {
-        ...init.headers,
-        'Authorization': `Bearer ${token}`
-      };
+      // Use new Headers() to correctly copy Headers objects AND plain objects
+      const newHeaders = new Headers(init?.headers);
+      newHeaders.set('Authorization', `Bearer ${token}`);
+      init = { ...(init ?? {}), headers: newHeaders };
     }
   }
   
@@ -31,7 +30,6 @@ window.fetch = async (input: RequestInfo | URL, init?: RequestInit) => {
   // If unauthorized and we had a token, it might be expired
   if (response.status === 401 && localStorage.getItem('receita_token')) {
     localStorage.removeItem('receita_token');
-    // We don't forcefully reload to avoid loops, let the app handle the 401 via React Query
   }
   
   return response;
