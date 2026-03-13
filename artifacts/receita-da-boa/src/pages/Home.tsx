@@ -41,7 +41,12 @@ export default function Home() {
   })
 
   const handleLogin = () => {
-    window.location.href = "/api/auth/google"
+    const loginUrl = `${window.location.origin}/api/auth/google`
+    if (window.top && window.top !== window) {
+      window.open(loginUrl, "_blank")
+    } else {
+      window.location.href = loginUrl
+    }
   }
 
   const handleLogout = () => {

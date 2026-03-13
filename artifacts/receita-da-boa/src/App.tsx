@@ -66,11 +66,36 @@ function App() {
     if (token) {
       localStorage.setItem('receita_token', token);
       // Clean URL without reloading
-      const newUrl = window.location.pathname;
-      window.history.replaceState({}, document.title, newUrl);
-      // Invalidate queries to trigger auth refresh
+      window.history.replaceState({}, document.title, window.location.pathname);
       queryClient.invalidateQueries();
+      // If this is a popup opened by another tab, notify opener and close
+      if (window.opener) {
+        window.opener.postMessage({ type: 'AUTH_SUCCESS', token }, '*');
+        window.close();
+      }
     }
+
+    // Listen for token set from another tab (cross-tab auth sync)
+    const onStorage = (e: StorageEvent) => {
+      if (e.key === 'receita_token' && e.newValue) {
+        queryClient.invalidateQueries();
+      }
+    };
+    window.addEventListener('storage', onStorage);
+
+    // Listen for postMessage from popup
+    const onMessage = (e: MessageEvent) => {
+      if (e.data?.type === 'AUTH_SUCCESS' && e.data?.token) {
+        localStorage.setItem('receita_token', e.data.token);
+        queryClient.invalidateQueries();
+      }
+    };
+    window.addEventListener('message', onMessage);
+
+    return () => {
+      window.removeEventListener('storage', onStorage);
+      window.removeEventListener('message', onMessage);
+    };
   }, []);
 
   return (
