@@ -1,22 +1,31 @@
 openapi: 3.1.0
 info:
-  # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: Receita da Boa - Recipe Management API
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: auth
+    description: Authentication
+  - name: receitas
+    description: Recipe operations
+  - name: categorias
+    description: Category operations
+  - name: favoritos
+    description: Favorite operations
+  - name: usuarios
+    description: User operations
+
 paths:
   /healthz:
     get:
       operationId: healthCheck
       tags: [health]
       summary: Health check
-      description: Returns server health status
       responses:
         "200":
           description: Healthy
@@ -24,7 +33,280 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  /auth/me:
+    get:
+      operationId: getMe
+      tags: [auth]
+      summary: Get current user
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Current user info
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "401":
+          description: Not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /receitas:
+    get:
+      operationId: getReceitas
+      tags: [receitas]
+      summary: List all recipes (public)
+      parameters:
+        - name: search
+          in: query
+          schema:
+            type: string
+        - name: categoriaId
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of recipes
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Receita"
+    post:
+      operationId: createReceita
+      tags: [receitas]
+      summary: Create a recipe (ADM only)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateReceitaInput"
+      responses:
+        "201":
+          description: Created recipe
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Receita"
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /receitas/{id}:
+    get:
+      operationId: getReceita
+      tags: [receitas]
+      summary: Get a recipe by ID (public)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Recipe details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Receita"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    put:
+      operationId: updateReceita
+      tags: [receitas]
+      summary: Update a recipe (ADM only)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateReceitaInput"
+      responses:
+        "200":
+          description: Updated recipe
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Receita"
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    delete:
+      operationId: deleteReceita
+      tags: [receitas]
+      summary: Delete a recipe (ADM only)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /categorias:
+    get:
+      operationId: getCategorias
+      tags: [categorias]
+      summary: List all categories (public)
+      responses:
+        "200":
+          description: List of categories
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Categoria"
+    post:
+      operationId: createCategoria
+      tags: [categorias]
+      summary: Create a category (ADM only)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateCategoriaInput"
+      responses:
+        "201":
+          description: Created category
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Categoria"
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /favoritos:
+    get:
+      operationId: getFavoritos
+      tags: [favoritos]
+      summary: List user favorites (authenticated)
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: List of favorited recipes
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Receita"
+        "401":
+          description: Not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    post:
+      operationId: addFavorito
+      tags: [favoritos]
+      summary: Add a recipe to favorites (authenticated)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/FavoritoInput"
+      responses:
+        "201":
+          description: Added to favorites
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+        "401":
+          description: Not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /favoritos/{receitaId}:
+    delete:
+      operationId: removeFavorito
+      tags: [favoritos]
+      summary: Remove a recipe from favorites (authenticated)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: receitaId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Removed from favorites
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+        "401":
+          description: Not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
 components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
   schemas:
     HealthStatus:
       type: object
@@ -34,3 +316,123 @@ components:
       required:
         - status
 
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+      required:
+        - error
+
+    MessageResponse:
+      type: object
+      properties:
+        message:
+          type: string
+      required:
+        - message
+
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+        nome:
+          type: string
+        email:
+          type: string
+        papel:
+          type: string
+          enum: [usuario, adm]
+      required:
+        - id
+        - nome
+        - email
+        - papel
+
+    Categoria:
+      type: object
+      properties:
+        id:
+          type: integer
+        nome:
+          type: string
+      required:
+        - id
+        - nome
+
+    Receita:
+      type: object
+      properties:
+        id:
+          type: integer
+        titulo:
+          type: string
+        descricao:
+          type: string
+        ingredientes:
+          type: string
+        instrucoes:
+          type: string
+        urlImagem:
+          type: string
+          nullable: true
+        categoriaId:
+          type: integer
+          nullable: true
+        autorId:
+          type: integer
+        categoria:
+          $ref: "#/components/schemas/Categoria"
+          nullable: true
+        autor:
+          $ref: "#/components/schemas/User"
+          nullable: true
+        isFavorited:
+          type: boolean
+      required:
+        - id
+        - titulo
+        - descricao
+        - ingredientes
+        - instrucoes
+        - autorId
+
+    CreateReceitaInput:
+      type: object
+      properties:
+        titulo:
+          type: string
+        descricao:
+          type: string
+        ingredientes:
+          type: string
+        instrucoes:
+          type: string
+        urlImagem:
+          type: string
+          nullable: true
+        categoriaId:
+          type: integer
+          nullable: true
+      required:
+        - titulo
+        - descricao
+        - ingredientes
+        - instrucoes
+
+    CreateCategoriaInput:
+      type: object
+      properties:
+        nome:
+          type: string
+      required:
+        - nome
+
+    FavoritoInput:
+      type: object
+      properties:
+        receitaId:
+          type: integer
+      required:
+        - receitaId

@@ -1,0 +1,17 @@
+packages:
+  "framer-motion": "For fluid layout transitions and beautiful modal animations"
+  "clsx": "For conditional class merging"
+  "tailwind-merge": "For robust tailwind class merging"
+  "date-fns": "For formatting dates if needed"
+
+images:
+  - path: "artifacts/receita-da-boa/public/images/empty-plate.png"
+    description: "A beautiful, empty artisan ceramic plate on a warm rustic wooden table, overhead shot, soft natural lighting"
+    aspect_ratio: "1:1"
+  - path: "artifacts/receita-da-boa/public/images/sidebar-bg.png"
+    description: "Subtle, very light warm abstract watercolor texture with hints of sage green and terracotta, mostly transparent/cream"
+    aspect_ratio: "9:16"
+
+notes:
+  - Global fetch interceptor added to inject Authorization Bearer token from localStorage
+  - URL query parameter `?token=` is extracted and saved to localStorage on app initialization

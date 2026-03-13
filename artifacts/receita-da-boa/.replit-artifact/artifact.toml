@@ -1,0 +1,31 @@
+kind = "web"
+previewPath = "/"
+title = "Receita da Boa"
+version = "1.0.0"
+id = "artifacts/receita-da-boa"
+router = "path"
+
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
+
+[[services]]
+localPort = 22496
+name = "web"
+paths = ["/"]
+
+[services.development]
+run = "pnpm --filter @workspace/receita-da-boa run dev"
+
+[services.env]
+PORT = "22496"
+BASE_PATH = "/"
+
+[services.production]
+build = ["pnpm", "--filter", "@workspace/receita-da-boa", "run", "build"]
+publicDir = "artifacts/receita-da-boa/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"

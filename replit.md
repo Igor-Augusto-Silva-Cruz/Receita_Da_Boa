@@ -1,8 +1,8 @@
-# Workspace
+# Receita da Boa
 
 ## Overview
 
-pnpm workspace monorepo using TypeScript. Each package manages its own dependencies.
+"Receita da Boa" is a full-stack recipe management and sharing platform with Google OAuth authentication, role-based access control, and a modern React SPA frontend.
 
 ## Stack
 
@@ -12,85 +12,76 @@ pnpm workspace monorepo using TypeScript. Each package manages its own dependenc
 - **TypeScript version**: 5.9
 - **API framework**: Express 5
 - **Database**: PostgreSQL + Drizzle ORM
+- **Authentication**: Google OAuth 2.0 (Passport.js) + JWT
 - **Validation**: Zod (`zod/v4`), `drizzle-zod`
 - **API codegen**: Orval (from OpenAPI spec)
+- **Frontend**: React + Vite (SPA)
 - **Build**: esbuild (CJS bundle)
 
 ## Structure
 
 ```text
 artifacts-monorepo/
-├── artifacts/              # Deployable applications
-│   └── api-server/         # Express API server
-├── lib/                    # Shared libraries
+├── artifacts/
+│   ├── api-server/         # Express API server (port auto-assigned)
+│   └── receita-da-boa/     # React + Vite frontend SPA (port auto-assigned)
+├── lib/
 │   ├── api-spec/           # OpenAPI spec + Orval codegen config
 │   ├── api-client-react/   # Generated React Query hooks
 │   ├── api-zod/            # Generated Zod schemas from OpenAPI
 │   └── db/                 # Drizzle ORM schema + DB connection
-├── scripts/                # Utility scripts (single workspace package)
-│   └── src/                # Individual .ts scripts, run via `pnpm --filter @workspace/scripts run <script>`
-├── pnpm-workspace.yaml     # pnpm workspace (artifacts/*, lib/*, lib/integrations/*, scripts)
-├── tsconfig.base.json      # Shared TS options (composite, bundler resolution, es2022)
-├── tsconfig.json           # Root TS project references
-└── package.json            # Root package with hoisted devDeps
+├── pnpm-workspace.yaml
+├── tsconfig.base.json
+├── tsconfig.json
+└── package.json
 ```
 
-## TypeScript & Composite Projects
+## Features
 
-Every package extends `tsconfig.base.json` which sets `composite: true`. The root `tsconfig.json` lists all packages as project references. This means:
+- **Google OAuth only** — no local passwords
+- **JWT sessions** — token stored in localStorage, passed as Bearer header
+- **Role-based access**: `usuario` and `adm`
+  - First user to sign up automatically becomes admin
+  - Only admins can create/edit/delete recipes and categories
+- **Recipes**: Public browsing, search by name, filter by category
+- **Favorites**: Logged-in users can favorite/unfavorite recipes
+- **Categories**: Publicly listed, admin-created
 
-- **Always typecheck from the root** — run `pnpm run typecheck` (which runs `tsc --build --emitDeclarationOnly`). This builds the full dependency graph so that cross-package imports resolve correctly. Running `tsc` inside a single package will fail if its dependencies haven't been built yet.
-- **`emitDeclarationOnly`** — we only emit `.d.ts` files during typecheck; actual JS bundling is handled by esbuild/tsx/vite...etc, not `tsc`.
-- **Project references** — when package A depends on package B, A's `tsconfig.json` must list B in its `references` array. `tsc --build` uses this to determine build order and skip up-to-date packages.
+## Data Models (Drizzle/Postgres)
 
-## Root Scripts
+- `users` — id, nome, email (unique), google_id (unique), papel (enum: usuario|adm)
+- `categorias` — id, nome
+- `receitas` — id, titulo, descricao, ingredientes, instrucoes, url_imagem, categoria_id, autor_id
+- `favoritos` — id, user_id, receita_id (unique pair)
 
-- `pnpm run build` — runs `typecheck` first, then recursively runs `build` in all packages that define it
-- `pnpm run typecheck` — runs `tsc --build --emitDeclarationOnly` using project references
+## API Endpoints
 
-## Packages
+- `GET /api/auth/google` — start Google OAuth
+- `GET /api/auth/google/callback` — OAuth callback (redirects to `/?token=JWT`)
+- `GET /api/auth/me` — get current user (requires auth)
+- `GET /api/receitas` — list recipes (public, supports ?search=&categoriaId=)
+- `GET /api/receitas/:id` — get recipe (public)
+- `POST/PUT/DELETE /api/receitas` — manage recipes (ADM only)
+- `GET/POST /api/favoritos` — user favorites (auth required)
+- `DELETE /api/favoritos/:receitaId` — remove favorite (auth required)
+- `GET /api/categorias` — list categories (public)
+- `POST /api/categorias` — create category (ADM only)
 
-### `artifacts/api-server` (`@workspace/api-server`)
+## Environment Variables Required
 
-Express 5 API server. Routes live in `src/routes/` and use `@workspace/api-zod` for request and response validation and `@workspace/db` for persistence.
+- `DATABASE_URL` — PostgreSQL connection string (auto-provisioned by Replit)
+- `GOOGLE_CLIENT_ID` — from Google Cloud Console
+- `GOOGLE_CLIENT_SECRET` — from Google Cloud Console
+- `JWT_SECRET` — random secret for signing JWT tokens
 
-- Entry: `src/index.ts` — reads `PORT`, starts Express
-- App setup: `src/app.ts` — mounts CORS, JSON/urlencoded parsing, routes at `/api`
-- Routes: `src/routes/index.ts` mounts sub-routers; `src/routes/health.ts` exposes `GET /health` (full path: `/api/health`)
-- Depends on: `@workspace/db`, `@workspace/api-zod`
-- `pnpm --filter @workspace/api-server run dev` — run the dev server
-- `pnpm --filter @workspace/api-server run build` — production esbuild bundle (`dist/index.cjs`)
-- Build bundles an allowlist of deps (express, cors, pg, drizzle-orm, zod, etc.) and externalizes the rest
+## Google OAuth Setup
 
-### `lib/db` (`@workspace/db`)
+In Google Cloud Console, add the authorized redirect URI:
+`https://[your-domain]/api/auth/google/callback`
 
-Database layer using Drizzle ORM with PostgreSQL. Exports a Drizzle client instance and schema models.
+## Development Commands
 
-- `src/index.ts` — creates a `Pool` + Drizzle instance, exports schema
-- `src/schema/index.ts` — barrel re-export of all models
-- `src/schema/<modelname>.ts` — table definitions with `drizzle-zod` insert schemas (no models definitions exist right now)
-- `drizzle.config.ts` — Drizzle Kit config (requires `DATABASE_URL`, automatically provided by Replit)
-- Exports: `.` (pool, db, schema), `./schema` (schema only)
-
-Production migrations are handled by Replit when publishing. In development, we just use `pnpm --filter @workspace/db run push`, and we fallback to `pnpm --filter @workspace/db run push-force`.
-
-### `lib/api-spec` (`@workspace/api-spec`)
-
-Owns the OpenAPI 3.1 spec (`openapi.yaml`) and the Orval config (`orval.config.ts`). Running codegen produces output into two sibling packages:
-
-1. `lib/api-client-react/src/generated/` — React Query hooks + fetch client
-2. `lib/api-zod/src/generated/` — Zod schemas
-
-Run codegen: `pnpm --filter @workspace/api-spec run codegen`
-
-### `lib/api-zod` (`@workspace/api-zod`)
-
-Generated Zod schemas from the OpenAPI spec (e.g. `HealthCheckResponse`). Used by `api-server` for response validation.
-
-### `lib/api-client-react` (`@workspace/api-client-react`)
-
-Generated React Query hooks and fetch client from the OpenAPI spec (e.g. `useHealthCheck`, `healthCheck`).
-
-### `scripts` (`@workspace/scripts`)
-
-Utility scripts package. Each script is a `.ts` file in `src/` with a corresponding npm script in `package.json`. Run scripts via `pnpm --filter @workspace/scripts run <script>`. Scripts can import any workspace package (e.g., `@workspace/db`) by adding it as a dependency in `scripts/package.json`.
+- `pnpm --filter @workspace/api-server run dev` — run API server
+- `pnpm --filter @workspace/receita-da-boa run dev` — run frontend
+- `pnpm --filter @workspace/db run push` — push DB schema changes
+- `pnpm --filter @workspace/api-spec run codegen` — regenerate API client from OpenAPI spec
