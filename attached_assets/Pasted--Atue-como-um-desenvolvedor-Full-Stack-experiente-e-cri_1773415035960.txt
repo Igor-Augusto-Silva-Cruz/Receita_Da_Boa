@@ -1,0 +1,79 @@
+"Atue como um desenvolvedor Full Stack experiente e crie o projeto 'Receita da boa', uma plataforma de gerenciamento e compartilhamento de receitas culinárias.
++1
+
+1. Stack Tecnológica:
+
+
+Backend: Node.js com Express.
+
+ORM: Prisma para comunicação com o banco de dados.
+
+Banco de Dados: PostgreSQL (configurado via variável de ambiente DATABASE_URL).
+
+Autenticação: Exclusivamente via Google OAuth 2.0 (Passport.js). Não deve haver sistema de senhas locais.
+
+2. Modelo de Dados (Prisma Schema):
+Implemente as seguintes entidades e relações:
+
+
+User (USUÁRIOS): id, nome, email (único), googleId (único), papel (enum: 'usuario', 'adm').
+
+
+Recipe (RECEITAS): id, titulo, descricao, ingredientes (texto), instrucoes (texto), urlImagem, categoriaId (FK), autorId (FK).
+
+
+Category (CATEGORIAS): id, nome.
+
+
+Favorite (FAVORITOS): Tabela associativa entre User e Recipe.
+
+3. Lógica de Autenticação e Níveis de Acesso:
+
+Utilize JWT (JSON Web Tokens) para manter a sessão do usuário após o login do Google.
+
+Regra de Promoção ADM: Se for o primeiro usuário a se cadastrar no banco, atribua o papel de 'adm'. Caso contrário, 'usuario' por padrão.
+
+Crie um middleware de autorização para proteger rotas exclusivas de administrador.
+
+4. Endpoints da API:
+
+
+Auth: GET /api/auth/google, GET /api/auth/google/callback.
+
+
+Receitas: GET /api/receitas (público), GET /api/receitas/:id (público), POST/PUT/DELETE /api/receitas (apenas ADM).
+
+
+Favoritos (Usuário Logado): GET /api/favoritos, POST /api/favoritos, DELETE /api/favoritos/:id.
+
+
+Categorias: GET /api/categorias (público), POST /api/categorias (apenas ADM).
+
+5. Front-end (Arquitetura de Interface):
+Crie uma Single Page Application (SPA) moderna e responsiva utilizando HTML, CSS e JavaScript puro (ou React, se preferir):
+
+
+Layout: Barra lateral esquerda com busca por nome, filtros de categoria e botão para ver favoritos.
+
+
+Catálogo: Grid central de cards mostrando a foto, título e categoria da receita.
++1
+
+Interatividade:
+
+Botão 'Favoritar' disponível apenas para usuários logados.
++1
+
+Botão 'Criar receita (Admin)' e ícones de edição/exclusão visíveis apenas para perfis ADM.
++1
+
+
+Modais: Um modal para exibir os detalhes completos da receita (ingredientes e modo de preparo) e outro para o formulário de criação/edição.
+
+6. Instruções Adicionais:
+
+Forneça o script para inicializar o banco de dados via Prisma.
+
+Utilize variáveis de ambiente para dados sensíveis (GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, JWT_SECRET).
+
+O design deve ser limpo e profissional, seguindo os protótipos visuais fornecidos no escopo."
