@@ -61,7 +61,7 @@ passport.use(
   )
 );
 
-router.get("/google", passport.authenticate("google", { scope: ["profile", "email"], session: false }));
+router.get("/google", passport.authenticate("google", { scope: ["profile", "email"], session: false, prompt: "select_account" } as object));
 
 router.get(
   "/google/callback",
