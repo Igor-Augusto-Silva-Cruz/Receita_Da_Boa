@@ -6,6 +6,7 @@
  * OpenAPI spec version: 0.2.0
  */
 
-export interface FavoritoInput {
+export interface ReportInput {
   receitaId: number;
+  motivo: string;
 }

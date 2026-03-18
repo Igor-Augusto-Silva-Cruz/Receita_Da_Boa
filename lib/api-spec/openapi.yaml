@@ -1,24 +1,23 @@
 openapi: 3.1.0
 info:
   title: Api
-  version: 0.1.0
-  description: Receita da Boa - Recipe Management API
+  version: 0.2.0
+  description: Receita da Boa - Social Recipe Network API
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
-    description: Health operations
   - name: auth
-    description: Authentication
   - name: receitas
-    description: Recipe operations
   - name: categorias
-    description: Category operations
   - name: favoritos
-    description: Favorite operations
+  - name: likes
+  - name: follows
+  - name: comments
+  - name: reports
+  - name: admin
   - name: usuarios
-    description: User operations
 
 paths:
   /healthz:
@@ -38,12 +37,11 @@ paths:
     get:
       operationId: getMe
       tags: [auth]
-      summary: Get current user
       security:
         - bearerAuth: []
       responses:
         "200":
-          description: Current user info
+          description: Current user
           content:
             application/json:
               schema:
@@ -59,8 +57,13 @@ paths:
     get:
       operationId: getReceitas
       tags: [receitas]
-      summary: List all recipes (public)
+      summary: List recipes
       parameters:
+        - name: feed
+          in: query
+          schema:
+            type: string
+            enum: [recentes, seguindo, populares]
         - name: search
           in: query
           schema:
@@ -81,7 +84,7 @@ paths:
     post:
       operationId: createReceita
       tags: [receitas]
-      summary: Create a recipe (ADM only)
+      summary: Create a recipe (any logged-in user)
       security:
         - bearerAuth: []
       requestBody:
@@ -97,8 +100,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Receita"
-        "403":
-          description: Forbidden
+        "401":
+          description: Not authenticated
           content:
             application/json:
               schema:
@@ -108,7 +111,7 @@ paths:
     get:
       operationId: getReceita
       tags: [receitas]
-      summary: Get a recipe by ID (public)
+      summary: Get recipe by ID
       parameters:
         - name: id
           in: path
@@ -131,7 +134,7 @@ paths:
     put:
       operationId: updateReceita
       tags: [receitas]
-      summary: Update a recipe (ADM only)
+      summary: Update own recipe
       security:
         - bearerAuth: []
       parameters:
@@ -162,7 +165,7 @@ paths:
     delete:
       operationId: deleteReceita
       tags: [receitas]
-      summary: Delete a recipe (ADM only)
+      summary: Delete own recipe
       security:
         - bearerAuth: []
       parameters:
@@ -189,7 +192,6 @@ paths:
     get:
       operationId: getCategorias
       tags: [categorias]
-      summary: List all categories (public)
       responses:
         "200":
           description: List of categories
@@ -202,7 +204,6 @@ paths:
     post:
       operationId: createCategoria
       tags: [categorias]
-      summary: Create a category (ADM only)
       security:
         - bearerAuth: []
       requestBody:
@@ -218,39 +219,25 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Categoria"
-        "403":
-          description: Forbidden
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
 
   /favoritos:
     get:
       operationId: getFavoritos
       tags: [favoritos]
-      summary: List user favorites (authenticated)
       security:
         - bearerAuth: []
       responses:
         "200":
-          description: List of favorited recipes
+          description: Favorited recipes
           content:
             application/json:
               schema:
                 type: array
                 items:
                   $ref: "#/components/schemas/Receita"
-        "401":
-          description: Not authenticated
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
     post:
       operationId: addFavorito
       tags: [favoritos]
-      summary: Add a recipe to favorites (authenticated)
       security:
         - bearerAuth: []
       requestBody:
@@ -261,23 +248,16 @@ paths:
               $ref: "#/components/schemas/FavoritoInput"
       responses:
         "201":
-          description: Added to favorites
+          description: Added
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/MessageResponse"
-        "401":
-          description: Not authenticated
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
 
   /favoritos/{receitaId}:
     delete:
       operationId: removeFavorito
       tags: [favoritos]
-      summary: Remove a recipe from favorites (authenticated)
       security:
         - bearerAuth: []
       parameters:
@@ -288,13 +268,172 @@ paths:
             type: integer
       responses:
         "200":
-          description: Removed from favorites
+          description: Removed
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/MessageResponse"
+
+  /likes/{receitaId}:
+    post:
+      operationId: likeReceita
+      tags: [likes]
+      summary: Like a recipe
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: receitaId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Like toggled
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LikeResponse"
         "401":
           description: Not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /follows/{userId}:
+    post:
+      operationId: followUser
+      tags: [follows]
+      summary: Follow or unfollow a user
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Follow toggled
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FollowResponse"
+        "400":
+          description: Cannot follow yourself
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /reports:
+    post:
+      operationId: reportReceita
+      tags: [reports]
+      summary: Report a recipe
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReportInput"
+      responses:
+        "201":
+          description: Reported
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+
+  /admin/reports:
+    get:
+      operationId: getAdminReports
+      tags: [admin]
+      summary: Get all reported recipes (ADM only)
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Reported recipes
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ReportedReceita"
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /admin/receitas/{id}:
+    delete:
+      operationId: adminDeleteReceita
+      tags: [admin]
+      summary: Admin delete any recipe
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+
+  /admin/usuarios/{id}/ban:
+    post:
+      operationId: banUsuario
+      tags: [admin]
+      summary: Ban a user (ADM only)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: User banned
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+
+  /usuarios/{id}:
+    get:
+      operationId: getUsuario
+      tags: [usuarios]
+      summary: Get user profile
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: User profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserProfile"
+        "404":
+          description: Not found
           content:
             application/json:
               schema:
@@ -313,24 +452,37 @@ components:
       properties:
         status:
           type: string
-      required:
-        - status
+      required: [status]
 
     ErrorResponse:
       type: object
       properties:
         error:
           type: string
-      required:
-        - error
+      required: [error]
 
     MessageResponse:
       type: object
       properties:
         message:
           type: string
-      required:
-        - message
+      required: [message]
+
+    LikeResponse:
+      type: object
+      properties:
+        liked:
+          type: boolean
+        likeCount:
+          type: integer
+      required: [liked, likeCount]
+
+    FollowResponse:
+      type: object
+      properties:
+        following:
+          type: boolean
+      required: [following]
 
     User:
       type: object
@@ -344,11 +496,33 @@ components:
         papel:
           type: string
           enum: [usuario, adm]
-      required:
-        - id
-        - nome
-        - email
-        - papel
+        isBanned:
+          type: boolean
+      required: [id, nome, email, papel, isBanned]
+
+    UserProfile:
+      type: object
+      properties:
+        id:
+          type: integer
+        nome:
+          type: string
+        email:
+          type: string
+        papel:
+          type: string
+          enum: [usuario, adm]
+        isBanned:
+          type: boolean
+        followersCount:
+          type: integer
+        followingCount:
+          type: integer
+        receitasCount:
+          type: integer
+        isFollowing:
+          type: boolean
+      required: [id, nome, email, papel, isBanned, followersCount, followingCount, receitasCount, isFollowing]
 
     Categoria:
       type: object
@@ -357,9 +531,7 @@ components:
           type: integer
         nome:
           type: string
-      required:
-        - id
-        - nome
+      required: [id, nome]
 
     Receita:
       type: object
@@ -382,21 +554,44 @@ components:
           nullable: true
         autorId:
           type: integer
+        isReported:
+          type: boolean
+        likeCount:
+          type: integer
+        isLiked:
+          type: boolean
+        isFavorited:
+          type: boolean
         categoria:
           $ref: "#/components/schemas/Categoria"
           nullable: true
         autor:
           $ref: "#/components/schemas/User"
           nullable: true
-        isFavorited:
+        createdAt:
+          type: string
+      required: [id, titulo, descricao, ingredientes, instrucoes, autorId, isReported, likeCount, isLiked, isFavorited, createdAt]
+
+    ReportedReceita:
+      type: object
+      properties:
+        id:
+          type: integer
+        titulo:
+          type: string
+        autorId:
+          type: integer
+        isReported:
           type: boolean
-      required:
-        - id
-        - titulo
-        - descricao
-        - ingredientes
-        - instrucoes
-        - autorId
+        reportCount:
+          type: integer
+        autor:
+          $ref: "#/components/schemas/User"
+          nullable: true
+        categoria:
+          $ref: "#/components/schemas/Categoria"
+          nullable: true
+      required: [id, titulo, autorId, isReported, reportCount]
 
     CreateReceitaInput:
       type: object
@@ -415,24 +610,27 @@ components:
         categoriaId:
           type: integer
           nullable: true
-      required:
-        - titulo
-        - descricao
-        - ingredientes
-        - instrucoes
+      required: [titulo, descricao, ingredientes, instrucoes]
 
     CreateCategoriaInput:
       type: object
       properties:
         nome:
           type: string
-      required:
-        - nome
+      required: [nome]
 
     FavoritoInput:
       type: object
       properties:
         receitaId:
           type: integer
-      required:
-        - receitaId
+      required: [receitaId]
+
+    ReportInput:
+      type: object
+      properties:
+        receitaId:
+          type: integer
+        motivo:
+          type: string
+      required: [receitaId, motivo]

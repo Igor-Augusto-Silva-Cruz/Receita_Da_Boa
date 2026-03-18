@@ -1,4 +1,4 @@
-import { pgTable, serial, text, integer, pgEnum, uniqueIndex } from "drizzle-orm/pg-core";
+import { pgTable, serial, text, integer, pgEnum, uniqueIndex, boolean, timestamp, index } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 
@@ -10,6 +10,7 @@ export const usersTable = pgTable("users", {
   email: text("email").notNull().unique(),
   googleId: text("google_id").notNull().unique(),
   papel: papelEnum("papel").notNull().default("usuario"),
+  isBanned: boolean("is_banned").notNull().default(false),
 });
 
 export const categoriasTable = pgTable("categorias", {
@@ -26,6 +27,8 @@ export const receitasTable = pgTable("receitas", {
   urlImagem: text("url_imagem"),
   categoriaId: integer("categoria_id").references(() => categoriasTable.id),
   autorId: integer("autor_id").notNull().references(() => usersTable.id),
+  isReported: boolean("is_reported").notNull().default(false),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
 export const favoritosTable = pgTable("favoritos", {
@@ -36,16 +39,54 @@ export const favoritosTable = pgTable("favoritos", {
   uniqueIndex("favoritos_user_receita_idx").on(t.userId, t.receitaId),
 ]);
 
+export const likesTable = pgTable("likes", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => usersTable.id),
+  receitaId: integer("receita_id").notNull().references(() => receitasTable.id),
+}, (t) => [
+  uniqueIndex("likes_user_receita_idx").on(t.userId, t.receitaId),
+]);
+
+export const followsTable = pgTable("follows", {
+  id: serial("id").primaryKey(),
+  followerId: integer("follower_id").notNull().references(() => usersTable.id),
+  followingId: integer("following_id").notNull().references(() => usersTable.id),
+}, (t) => [
+  uniqueIndex("follows_pair_idx").on(t.followerId, t.followingId),
+]);
+
+export const commentsTable = pgTable("comments", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => usersTable.id),
+  receitaId: integer("receita_id").notNull().references(() => receitasTable.id),
+  texto: text("texto").notNull(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const reportsTable = pgTable("reports", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => usersTable.id),
+  receitaId: integer("receita_id").notNull().references(() => receitasTable.id),
+  motivo: text("motivo").notNull(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
 export const insertUserSchema = createInsertSchema(usersTable).omit({ id: true });
 export const insertCategoriaSchema = createInsertSchema(categoriasTable).omit({ id: true });
-export const insertReceitaSchema = createInsertSchema(receitasTable).omit({ id: true });
+export const insertReceitaSchema = createInsertSchema(receitasTable).omit({ id: true, createdAt: true });
 export const insertFavoritoSchema = createInsertSchema(favoritosTable).omit({ id: true });
+export const insertLikeSchema = createInsertSchema(likesTable).omit({ id: true });
+export const insertFollowSchema = createInsertSchema(followsTable).omit({ id: true });
+export const insertCommentSchema = createInsertSchema(commentsTable).omit({ id: true, createdAt: true });
+export const insertReportSchema = createInsertSchema(reportsTable).omit({ id: true, createdAt: true });
 
 export type User = typeof usersTable.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type Categoria = typeof categoriasTable.$inferSelect;
-export type InsertCategoria = z.infer<typeof insertCategoriaSchema>;
 export type Receita = typeof receitasTable.$inferSelect;
 export type InsertReceita = z.infer<typeof insertReceitaSchema>;
 export type Favorito = typeof favoritosTable.$inferSelect;
-export type InsertFavorito = z.infer<typeof insertFavoritoSchema>;
+export type Like = typeof likesTable.$inferSelect;
+export type Follow = typeof followsTable.$inferSelect;
+export type Comment = typeof commentsTable.$inferSelect;
+export type Report = typeof reportsTable.$inferSelect;

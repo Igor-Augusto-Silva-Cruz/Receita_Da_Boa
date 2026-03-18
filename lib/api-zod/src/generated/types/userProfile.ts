@@ -5,12 +5,16 @@
  * Receita da Boa - Social Recipe Network API
  * OpenAPI spec version: 0.2.0
  */
-import type { UserPapel } from "./userPapel";
+import type { UserProfilePapel } from "./userProfilePapel";
 
-export interface User {
+export interface UserProfile {
   id: number;
   nome: string;
   email: string;
-  papel: UserPapel;
+  papel: UserProfilePapel;
   isBanned: boolean;
+  followersCount: number;
+  followingCount: number;
+  receitasCount: number;
+  isFollowing: boolean;
 }

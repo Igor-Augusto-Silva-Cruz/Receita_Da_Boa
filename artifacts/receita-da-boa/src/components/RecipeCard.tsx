@@ -1,127 +1,173 @@
 import * as React from "react"
-import { useAddFavorito, useRemoveFavorito, useDeleteReceita, getGetReceitasQueryKey, getGetFavoritosQueryKey } from "@workspace/api-client-react"
-import type { Receita, User } from "@workspace/api-client-react/src/generated/api.schemas"
+import { Link } from "wouter"
+import { Receita, User } from "@workspace/api-client-react/src/generated/api.schemas"
+import { Heart, Bookmark, Flag, MoreVertical, Edit2, Trash2 } from "lucide-react"
+import { Button } from "./ui/button"
+import { useLikeReceita, useAddFavorito, useRemoveFavorito, getGetReceitasQueryKey } from "@workspace/api-client-react"
 import { useQueryClient } from "@tanstack/react-query"
-import { Heart, Edit2, Trash2 } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
-import { cn } from "@/lib/utils"
+import { motion } from "framer-motion"
 
-interface Props {
+interface RecipeCardProps {
   recipe: Receita
-  currentUser: User | undefined
+  currentUser?: User | null
   onClick: () => void
   onEdit: () => void
+  onDelete: () => void
+  onReport: () => void
 }
 
-export function RecipeCard({ recipe, currentUser, onClick, onEdit }: Props) {
+export function RecipeCard({ recipe, currentUser, onClick, onEdit, onDelete, onReport }: RecipeCardProps) {
   const queryClient = useQueryClient()
   const { toast } = useToast()
   
+  const { mutate: like } = useLikeReceita()
   const { mutate: addFav } = useAddFavorito()
-  const { mutate: rmFav } = useRemoveFavorito()
-  const { mutate: delRecipe, isPending: isDeleting } = useDeleteReceita()
+  const { mutate: remFav } = useRemoveFavorito()
+  
+  const [showActions, setShowActions] = React.useState(false)
 
-  const isAdmin = currentUser?.papel === "adm"
-  const isLoggedIn = !!currentUser
-
-  const handleToggleFavorite = (e: React.MouseEvent) => {
+  const handleLike = (e: React.MouseEvent) => {
     e.stopPropagation()
-    if (!isLoggedIn) {
-      toast({ title: "Oops!", description: "Faça login para favoritar receitas." })
-      return
-    }
-
-    const action = recipe.isFavorited ? rmFav : addFav
-    const payload = recipe.isFavorited ? { receitaId: recipe.id } : { data: { receitaId: recipe.id } }
-
-    action(payload as any, {
-      onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: getGetReceitasQueryKey() })
-        queryClient.invalidateQueries({ queryKey: getGetFavoritosQueryKey() })
-      }
-    })
-  }
-
-  const handleDelete = (e: React.MouseEvent) => {
-    e.stopPropagation()
-    if (!window.confirm(`Tem certeza que deseja deletar "${recipe.titulo}"?`)) return
+    if (!currentUser) return promptLogin()
     
-    delRecipe({ id: recipe.id }, {
-      onSuccess: () => {
-        toast({ title: "Receita deletada." })
-        queryClient.invalidateQueries({ queryKey: getGetReceitasQueryKey() })
-        queryClient.invalidateQueries({ queryKey: getGetFavoritosQueryKey() })
-      }
+    // Optimistic toggle
+    const previousRecipes = queryClient.getQueryData<Receita[]>(getGetReceitasQueryKey())
+    
+    like({ receitaId: recipe.id }, {
+      onSuccess: () => queryClient.invalidateQueries({ queryKey: getGetReceitasQueryKey() }),
+      onError: () => toast({ title: "Erro ao curtir", variant: "destructive" })
     })
   }
 
-  {/* default beautiful empty plate if no image */}
-  const imgUrl = recipe.urlImagem || `${import.meta.env.BASE_URL}images/empty-plate.png`
+  const handleFavorite = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    if (!currentUser) return promptLogin()
+    
+    if (recipe.isFavorited) {
+      remFav({ receitaId: recipe.id }, {
+        onSuccess: () => queryClient.invalidateQueries({ queryKey: getGetReceitasQueryKey() })
+      })
+    } else {
+      addFav({ data: { receitaId: recipe.id } }, {
+        onSuccess: () => queryClient.invalidateQueries({ queryKey: getGetReceitasQueryKey() })
+      })
+    }
+  }
+
+  const handleAction = (e: React.MouseEvent, action: () => void) => {
+    e.stopPropagation()
+    setShowActions(false)
+    action()
+  }
+
+  const promptLogin = () => {
+    toast({ title: "Login necessário", description: "Entre para interagir com as receitas." })
+  }
+
+  const isOwner = currentUser?.id === recipe.autorId
+  const isAdmin = currentUser?.papel === "adm"
+  const canEdit = isOwner || isAdmin
 
   return (
-    <div 
+    <motion.div 
+      layout
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="group bg-card rounded-[2rem] shadow-card hover:shadow-xl transition-all duration-300 border border-border/40 overflow-hidden cursor-pointer flex flex-col h-[420px]"
       onClick={onClick}
-      className="group relative bg-card rounded-3xl overflow-hidden cursor-pointer shadow-soft border border-border/40 hover:shadow-xl hover:border-border/80 transition-all duration-300 hover:-translate-y-1 flex flex-col h-full"
     >
-      <div className="relative aspect-[4/3] overflow-hidden bg-muted">
-        <img 
-          src={imgUrl} 
-          alt={recipe.titulo}
-          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-60" />
-        
-        {recipe.categoria && (
-          <div className="absolute top-4 left-4 bg-white/90 backdrop-blur-md px-3 py-1.5 rounded-full text-xs font-bold text-foreground shadow-sm">
-            {recipe.categoria.nome}
+      <div className="relative h-[220px] w-full overflow-hidden bg-muted">
+        {recipe.urlImagem ? (
+          <img 
+            src={recipe.urlImagem} 
+            alt={recipe.titulo} 
+            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+          />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center bg-secondary/10">
+            <span className="text-secondary/50 font-display text-2xl font-bold italic">RdB</span>
           </div>
         )}
-
-        <button
-          onClick={handleToggleFavorite}
-          className={cn(
-            "absolute top-4 right-4 p-2.5 rounded-full bg-white/90 backdrop-blur-md shadow-sm transition-transform hover:scale-110 active:scale-95",
-            recipe.isFavorited ? "text-primary" : "text-muted-foreground hover:text-primary"
+        
+        <div className="absolute top-4 left-4 flex gap-2">
+          {recipe.categoria && (
+            <span className="glass-panel px-3 py-1.5 rounded-xl text-xs font-bold text-foreground">
+              {recipe.categoria.nome}
+            </span>
           )}
-        >
-          <Heart className={cn("w-5 h-5", recipe.isFavorited && "fill-current")} />
-        </button>
+        </div>
+        
+        <div className="absolute top-4 right-4 flex flex-col gap-2">
+          <button 
+            onClick={handleFavorite}
+            className={`w-10 h-10 rounded-full flex items-center justify-center backdrop-blur-md transition-all shadow-sm
+              ${recipe.isFavorited ? 'bg-primary text-primary-foreground' : 'bg-white/80 dark:bg-black/50 text-foreground hover:bg-white dark:hover:bg-black'}`}
+          >
+            <Bookmark className="w-5 h-5" fill={recipe.isFavorited ? "currentColor" : "none"} />
+          </button>
+        </div>
       </div>
 
-      <div className="p-6 flex-1 flex flex-col">
-        <h3 className="text-xl font-display font-bold text-foreground leading-tight mb-2 line-clamp-2">
-          {recipe.titulo}
-        </h3>
+      <div className="p-6 flex flex-col flex-1">
+        <div className="flex justify-between items-start gap-4 mb-3">
+          <h3 className="text-xl font-display font-bold text-foreground line-clamp-2 leading-tight">
+            {recipe.titulo}
+          </h3>
+          <div className="relative">
+            <button 
+              onClick={(e) => { e.stopPropagation(); setShowActions(!showActions); }}
+              className="p-1.5 text-muted-foreground hover:bg-muted rounded-full transition-colors"
+            >
+              <MoreVertical className="w-5 h-5" />
+            </button>
+            
+            {showActions && (
+              <div className="absolute right-0 top-full mt-1 w-48 glass-panel rounded-xl shadow-lg border border-border py-1 z-10 flex flex-col">
+                {canEdit && (
+                  <>
+                    <button onClick={(e) => handleAction(e, onEdit)} className="w-full px-4 py-2 text-left text-sm font-medium hover:bg-muted flex items-center gap-2">
+                      <Edit2 className="w-4 h-4" /> Editar
+                    </button>
+                    <button onClick={(e) => handleAction(e, onDelete)} className="w-full px-4 py-2 text-left text-sm font-medium hover:bg-destructive/10 text-destructive flex items-center gap-2">
+                      <Trash2 className="w-4 h-4" /> Excluir
+                    </button>
+                  </>
+                )}
+                {!isOwner && currentUser && (
+                  <button onClick={(e) => handleAction(e, onReport)} className="w-full px-4 py-2 text-left text-sm font-medium hover:bg-orange-500/10 text-orange-600 flex items-center gap-2">
+                    <Flag className="w-4 h-4" /> Denunciar
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+        
         <p className="text-muted-foreground text-sm line-clamp-2 mb-4 flex-1">
           {recipe.descricao}
         </p>
 
-        <div className="flex items-center justify-between mt-auto pt-4 border-t border-border/50">
-          <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-            {recipe.autor?.nome || "Comunidade"}
-          </span>
-
-          {isAdmin && (
-            <div className="flex items-center gap-1">
-              <button 
-                onClick={(e) => { e.stopPropagation(); onEdit(); }}
-                className="p-2 text-muted-foreground hover:bg-secondary/10 hover:text-secondary rounded-full transition-colors"
-                title="Editar"
-              >
-                <Edit2 className="w-4 h-4" />
-              </button>
-              <button 
-                onClick={handleDelete}
-                disabled={isDeleting}
-                className="p-2 text-muted-foreground hover:bg-destructive/10 hover:text-destructive rounded-full transition-colors disabled:opacity-50"
-                title="Deletar"
-              >
-                <Trash2 className="w-4 h-4" />
-              </button>
+        <div className="flex items-center justify-between pt-4 border-t border-border/50 mt-auto">
+          <Link href={`/usuario/${recipe.autorId}`} onClick={e => e.stopPropagation()} className="flex items-center gap-2 group/author">
+            <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-primary to-accent flex items-center justify-center text-primary-foreground font-bold text-xs shadow-sm">
+              {recipe.autor?.nome?.charAt(0).toUpperCase() || 'U'}
             </div>
-          )}
+            <span className="text-sm font-medium text-foreground group-hover/author:text-primary transition-colors">
+              {recipe.autor?.nome}
+            </span>
+          </Link>
+          
+          <button 
+            onClick={handleLike}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full transition-colors text-sm font-bold
+              ${recipe.isLiked ? 'bg-red-500/10 text-red-500' : 'bg-muted text-muted-foreground hover:bg-red-500/10 hover:text-red-500'}`}
+          >
+            <Heart className="w-4 h-4" fill={recipe.isLiked ? "currentColor" : "none"} />
+            {recipe.likeCount}
+          </button>
         </div>
       </div>
-    </div>
+    </motion.div>
   )
 }

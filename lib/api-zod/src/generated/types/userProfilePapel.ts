@@ -6,9 +6,10 @@
  * OpenAPI spec version: 0.2.0
  */
 
-export type UserPapel = (typeof UserPapel)[keyof typeof UserPapel];
+export type UserProfilePapel =
+  (typeof UserProfilePapel)[keyof typeof UserProfilePapel];
 
-export const UserPapel = {
+export const UserProfilePapel = {
   usuario: "usuario",
   adm: "adm",
 } as const;

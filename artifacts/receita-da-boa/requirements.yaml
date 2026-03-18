@@ -1,17 +1,20 @@
 packages:
-  "framer-motion": "For fluid layout transitions and beautiful modal animations"
+  "framer-motion": "For smooth page transitions and micro-interactions"
+  "date-fns": "For formatting dates nicely (e.g., 'há 2 dias')"
   "clsx": "For conditional class merging"
-  "tailwind-merge": "For robust tailwind class merging"
-  "date-fns": "For formatting dates if needed"
+  "tailwind-merge": "For conflict-free tailwind class merging"
 
 images:
-  - path: "artifacts/receita-da-boa/public/images/empty-plate.png"
-    description: "A beautiful, empty artisan ceramic plate on a warm rustic wooden table, overhead shot, soft natural lighting"
-    aspect_ratio: "1:1"
   - path: "artifacts/receita-da-boa/public/images/sidebar-bg.png"
-    description: "Subtle, very light warm abstract watercolor texture with hints of sage green and terracotta, mostly transparent/cream"
+    description: "Abstract watercolor texture in warm terracotta, soft peach, and sage green colors, very subtle and elegant"
     aspect_ratio: "9:16"
+  - path: "artifacts/receita-da-boa/public/images/empty-plate.png"
+    description: "Minimalist top-down illustration of an empty ceramic plate with a fork and knife beside it, warm neutral colors"
+    aspect_ratio: "1:1"
+  - path: "artifacts/receita-da-boa/public/images/hero-pattern.png"
+    description: "Seamless geometric pattern of subtle food ingredients like leaves, garlic, and lemons in a very light cream color on a slightly darker cream background"
+    aspect_ratio: "16:9"
 
 notes:
-  - Global fetch interceptor added to inject Authorization Bearer token from localStorage
-  - URL query parameter `?token=` is extracted and saved to localStorage on app initialization
+  - App uses @workspace/api-client-react for all data fetching.
+  - Orval generated hooks are used exclusively for API communication.

@@ -6,6 +6,6 @@
  * OpenAPI spec version: 0.2.0
  */
 
-export interface FavoritoInput {
-  receitaId: number;
+export interface FollowResponse {
+  following: boolean;
 }

@@ -5,6 +5,8 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/not-found";
 import Home from "@/pages/Home";
+import Moderation from "@/pages/Moderation";
+import Profile from "@/pages/Profile";
 
 // Intercept global fetch to inject token into API requests
 const originalFetch = window.fetch;
@@ -50,6 +52,8 @@ function Router() {
   return (
     <Switch>
       <Route path="/" component={Home} />
+      <Route path="/moderacao" component={Moderation} />
+      <Route path="/usuario/:id" component={Profile} />
       <Route component={NotFound} />
     </Switch>
   );

@@ -8,20 +8,12 @@
 import type { Categoria } from "./categoria";
 import type { User } from "./user";
 
-export interface Receita {
+export interface ReportedReceita {
   id: number;
   titulo: string;
-  descricao: string;
-  ingredientes: string;
-  instrucoes: string;
-  urlImagem?: string | null;
-  categoriaId?: number | null;
   autorId: number;
   isReported: boolean;
-  likeCount: number;
-  isLiked: boolean;
-  isFavorited: boolean;
-  categoria?: Categoria | null;
+  reportCount: number;
   autor?: User | null;
-  createdAt: string;
+  categoria?: Categoria | null;
 }
