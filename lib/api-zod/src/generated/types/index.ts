@@ -19,6 +19,7 @@ export * from "./likeResponse";
 export * from "./messageResponse";
 export * from "./receita";
 export * from "./reportedReceita";
+export * from "./reportEntry";
 export * from "./reportInput";
 export * from "./user";
 export * from "./userPapel";

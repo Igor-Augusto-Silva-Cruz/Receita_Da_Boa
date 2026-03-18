@@ -72,6 +72,10 @@ paths:
           in: query
           schema:
             type: integer
+        - name: autorId
+          in: query
+          schema:
+            type: integer
       responses:
         "200":
           description: List of recipes
@@ -353,12 +357,12 @@ paths:
     get:
       operationId: getAdminReports
       tags: [admin]
-      summary: Get all reported recipes (ADM only)
+      summary: Get all reported recipes with individual report details (ADM only)
       security:
         - bearerAuth: []
       responses:
         "200":
-          description: Reported recipes
+          description: Reported recipes with report details
           content:
             application/json:
               schema:
@@ -498,6 +502,9 @@ components:
           enum: [usuario, adm]
         isBanned:
           type: boolean
+        photoUrl:
+          type: string
+          nullable: true
       required: [id, nome, email, papel, isBanned]
 
     UserProfile:
@@ -514,6 +521,9 @@ components:
           enum: [usuario, adm]
         isBanned:
           type: boolean
+        photoUrl:
+          type: string
+          nullable: true
         followersCount:
           type: integer
         followingCount:
@@ -572,6 +582,22 @@ components:
           type: string
       required: [id, titulo, descricao, ingredientes, instrucoes, autorId, isReported, likeCount, isLiked, isFavorited, createdAt]
 
+    ReportEntry:
+      type: object
+      properties:
+        id:
+          type: integer
+        motivo:
+          type: string
+        userId:
+          type: integer
+        createdAt:
+          type: string
+        denunciante:
+          $ref: "#/components/schemas/User"
+          nullable: true
+      required: [id, motivo, userId, createdAt]
+
     ReportedReceita:
       type: object
       properties:
@@ -579,19 +605,40 @@ components:
           type: integer
         titulo:
           type: string
+        descricao:
+          type: string
+        ingredientes:
+          type: string
+        instrucoes:
+          type: string
+        urlImagem:
+          type: string
+          nullable: true
         autorId:
           type: integer
         isReported:
           type: boolean
         reportCount:
           type: integer
+        likeCount:
+          type: integer
+        isLiked:
+          type: boolean
+        isFavorited:
+          type: boolean
+        createdAt:
+          type: string
         autor:
           $ref: "#/components/schemas/User"
           nullable: true
         categoria:
           $ref: "#/components/schemas/Categoria"
           nullable: true
-      required: [id, titulo, autorId, isReported, reportCount]
+        reports:
+          type: array
+          items:
+            $ref: "#/components/schemas/ReportEntry"
+      required: [id, titulo, autorId, isReported, reportCount, reports]
 
     CreateReceitaInput:
       type: object

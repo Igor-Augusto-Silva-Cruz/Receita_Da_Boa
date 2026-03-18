@@ -13,6 +13,7 @@ export interface UserProfile {
   email: string;
   papel: UserProfilePapel;
   isBanned: boolean;
+  photoUrl?: string | null;
   followersCount: number;
   followingCount: number;
   receitasCount: number;

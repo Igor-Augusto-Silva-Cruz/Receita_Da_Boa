@@ -39,6 +39,7 @@ export interface User {
   email: string;
   papel: UserPapel;
   isBanned: boolean;
+  photoUrl?: string | null;
 }
 
 export type UserProfilePapel =
@@ -55,6 +56,7 @@ export interface UserProfile {
   email: string;
   papel: UserProfilePapel;
   isBanned: boolean;
+  photoUrl?: string | null;
   followersCount: number;
   followingCount: number;
   receitasCount: number;
@@ -84,14 +86,31 @@ export interface Receita {
   createdAt: string;
 }
 
+export interface ReportEntry {
+  id: number;
+  motivo: string;
+  userId: number;
+  createdAt: string;
+  denunciante?: User | null;
+}
+
 export interface ReportedReceita {
   id: number;
   titulo: string;
+  descricao?: string;
+  ingredientes?: string;
+  instrucoes?: string;
+  urlImagem?: string | null;
   autorId: number;
   isReported: boolean;
   reportCount: number;
+  likeCount?: number;
+  isLiked?: boolean;
+  isFavorited?: boolean;
+  createdAt?: string;
   autor?: User | null;
   categoria?: Categoria | null;
+  reports: ReportEntry[];
 }
 
 export interface CreateReceitaInput {
@@ -120,6 +139,7 @@ export type GetReceitasParams = {
   feed?: GetReceitasFeed;
   search?: string;
   categoriaId?: number;
+  autorId?: number;
 };
 
 export type GetReceitasFeed =

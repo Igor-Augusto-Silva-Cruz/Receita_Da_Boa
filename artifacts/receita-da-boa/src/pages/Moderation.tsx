@@ -1,11 +1,16 @@
 import * as React from "react"
 import { useGetAdminReports, useAdminDeleteReceita, useBanUsuario, useGetMe, getGetAdminReportsQueryKey } from "@workspace/api-client-react"
 import { Sidebar } from "@/components/Sidebar"
-import { ShieldAlert, Trash2, Ban, ExternalLink } from "lucide-react"
+import { UserAvatar } from "@/components/UserAvatar"
+import { RecipeDetailModal } from "@/components/RecipeDetailModal"
+import { ShieldAlert, Trash2, Ban, ChevronDown, ChevronUp, MessageSquare } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useToast } from "@/hooks/use-toast"
 import { useQueryClient } from "@tanstack/react-query"
 import { Link } from "wouter"
+import { formatDistanceToNow } from "date-fns"
+import { ptBR } from "date-fns/locale"
+import { ReportedReceita } from "@workspace/api-client-react/src/generated/api.schemas"
 
 export default function Moderation() {
   const { data: user } = useGetMe({ query: { retry: false } })
@@ -15,19 +20,23 @@ export default function Moderation() {
   const queryClient = useQueryClient()
   const { toast } = useToast()
 
+  const [expandedId, setExpandedId] = React.useState<number | null>(null)
+  const [previewRecipe, setPreviewRecipe] = React.useState<ReportedReceita | null>(null)
+
   const handleDelete = (id: number) => {
-    if(confirm("Excluir definitivamente esta receita?")) {
+    if (confirm("Excluir definitivamente esta receita?")) {
       deleteRecipe({ id }, {
         onSuccess: () => {
           toast({ title: "Receita excluída" })
           queryClient.invalidateQueries({ queryKey: getGetAdminReportsQueryKey() })
+          setPreviewRecipe(null)
         }
       })
     }
   }
 
   const handleBan = (id: number, name: string) => {
-    if(confirm(`Banir o usuário ${name}? Ele não poderá mais logar.`)) {
+    if (confirm(`Banir o usuário ${name}? Ele não poderá mais criar receitas.`)) {
       banUser({ id }, {
         onSuccess: () => {
           toast({ title: "Usuário banido", variant: "destructive" })
@@ -63,58 +72,104 @@ export default function Moderation() {
             </div>
           </div>
 
-          <div className="bg-card border border-border shadow-card rounded-3xl overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm text-left">
-                <thead className="bg-muted/50 text-muted-foreground font-medium uppercase tracking-wider text-xs">
-                  <tr>
-                    <th className="px-6 py-4">Receita</th>
-                    <th className="px-6 py-4">Autor</th>
-                    <th className="px-6 py-4 text-center">Denúncias</th>
-                    <th className="px-6 py-4 text-right">Ações</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-border/50">
-                  {isLoading ? (
-                    <tr><td colSpan={4} className="px-6 py-8 text-center text-muted-foreground">Carregando...</td></tr>
-                  ) : reports?.length === 0 ? (
-                    <tr><td colSpan={4} className="px-6 py-12 text-center font-medium text-muted-foreground">Nenhuma denúncia pendente. Tudo limpo! ✨</td></tr>
-                  ) : reports?.map(report => (
-                    <tr key={report.id} className="hover:bg-muted/30 transition-colors">
-                      <td className="px-6 py-4">
-                        <div className="font-bold text-foreground">{report.titulo}</div>
-                        <div className="text-xs text-muted-foreground">{report.categoria?.nome}</div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <Link href={`/usuario/${report.autorId}`} className="flex items-center gap-2 hover:text-primary">
-                          <div className="w-6 h-6 rounded-full bg-primary/20 text-primary flex items-center justify-center text-[10px] font-bold">
-                            {report.autor?.nome?.charAt(0)}
+          <div className="space-y-4">
+            {isLoading ? (
+              <div className="text-center py-12 text-muted-foreground">Carregando...</div>
+            ) : reports?.length === 0 ? (
+              <div className="bg-card border border-border shadow-card rounded-3xl px-8 py-16 text-center font-medium text-muted-foreground">
+                Nenhuma denúncia pendente. Tudo limpo! ✨
+              </div>
+            ) : reports?.map(report => (
+              <div key={report.id} className="bg-card border border-border shadow-card rounded-3xl overflow-hidden">
+                {/* Recipe header — click to open detail modal */}
+                <div
+                  className="flex items-center gap-4 p-6 cursor-pointer hover:bg-muted/30 transition-colors"
+                  onClick={() => setPreviewRecipe(previewRecipe?.id === report.id ? null : report)}
+                >
+                  {/* Thumbnail */}
+                  <div className="w-16 h-16 rounded-2xl overflow-hidden bg-muted flex-shrink-0">
+                    {report.urlImagem ? (
+                      <img src={report.urlImagem} alt={report.titulo} className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-muted-foreground text-xs font-bold">RdB</div>
+                    )}
+                  </div>
+
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <h3 className="font-bold text-foreground text-lg">{report.titulo}</h3>
+                      {report.categoria && (
+                        <span className="text-xs bg-muted px-2 py-0.5 rounded-full text-muted-foreground">{report.categoria.nome}</span>
+                      )}
+                    </div>
+                    <Link href={`/usuario/${report.autorId}`} onClick={e => e.stopPropagation()} className="flex items-center gap-1.5 mt-1 text-sm text-muted-foreground hover:text-primary w-fit">
+                      <UserAvatar nome={report.autor?.nome} photoUrl={report.autor?.photoUrl} size="xs" />
+                      <span>{report.autor?.nome}</span>
+                    </Link>
+                  </div>
+
+                  <div className="flex items-center gap-4 flex-shrink-0">
+                    <div className="text-center">
+                      <div className="w-10 h-10 rounded-full bg-orange-500/10 text-orange-600 font-bold flex items-center justify-center text-sm">
+                        {report.reportCount}
+                      </div>
+                      <div className="text-xs text-muted-foreground mt-1">denúncias</div>
+                    </div>
+
+                    <div className="flex gap-2">
+                      <Button variant="outline" size="sm" onClick={(e) => { e.stopPropagation(); handleDelete(report.id); }} className="text-destructive hover:bg-destructive/10 hover:border-destructive/30">
+                        <Trash2 className="w-4 h-4 mr-1.5" /> Excluir
+                      </Button>
+                      <Button variant="outline" size="sm" onClick={(e) => { e.stopPropagation(); handleBan(report.autorId, report.autor?.nome || ''); }} className="text-destructive hover:bg-destructive/10 hover:border-destructive/30">
+                        <Ban className="w-4 h-4 mr-1.5" /> Banir
+                      </Button>
+                    </div>
+
+                    <button
+                      onClick={(e) => { e.stopPropagation(); setExpandedId(expandedId === report.id ? null : report.id); }}
+                      className="p-2 rounded-full hover:bg-muted transition-colors text-muted-foreground"
+                    >
+                      {expandedId === report.id ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Reports list — expandable */}
+                {expandedId === report.id && report.reports && report.reports.length > 0 && (
+                  <div className="border-t border-border divide-y divide-border/50">
+                    {report.reports.map((r) => (
+                      <div key={r.id} className="px-6 py-4 flex items-start gap-3">
+                        <UserAvatar nome={r.denunciante?.nome} photoUrl={r.denunciante?.photoUrl} size="sm" className="mt-0.5 flex-shrink-0" />
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className="font-medium text-sm text-foreground">{r.denunciante?.nome ?? "Usuário"}</span>
+                            <span className="text-xs text-muted-foreground">
+                              {formatDistanceToNow(new Date(r.createdAt), { addSuffix: true, locale: ptBR })}
+                            </span>
                           </div>
-                          <span className="font-medium">{report.autor?.nome}</span>
-                          <ExternalLink className="w-3 h-3 text-muted-foreground" />
-                        </Link>
-                      </td>
-                      <td className="px-6 py-4 text-center">
-                        <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-orange-500/10 text-orange-600 font-bold">
-                          {report.reportCount}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 text-right space-x-2">
-                        <Button variant="outline" size="sm" onClick={() => handleDelete(report.id)} className="text-destructive hover:bg-destructive/10 hover:border-destructive/30">
-                          <Trash2 className="w-4 h-4 mr-2" /> Excluir Receita
-                        </Button>
-                        <Button variant="outline" size="sm" onClick={() => handleBan(report.autorId, report.autor?.nome || '')} className="text-destructive hover:bg-destructive/10 hover:border-destructive/30">
-                          <Ban className="w-4 h-4 mr-2" /> Banir Autor
-                        </Button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                          <div className="flex items-start gap-2">
+                            <MessageSquare className="w-4 h-4 text-muted-foreground mt-0.5 flex-shrink-0" />
+                            <p className="text-sm text-foreground/80 italic">"{r.motivo}"</p>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ))}
           </div>
         </div>
       </main>
+
+      {/* Recipe detail modal for previewing reported recipes */}
+      <RecipeDetailModal
+        isOpen={!!previewRecipe}
+        onClose={() => setPreviewRecipe(null)}
+        recipe={previewRecipe as any}
+        currentUser={user}
+        onReport={() => {}}
+      />
     </div>
   )
 }

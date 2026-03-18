@@ -32,6 +32,7 @@ passport.use(
         const googleId = profile.id;
         const email = profile.emails?.[0]?.value ?? "";
         const nome = profile.displayName ?? email;
+        const photoUrl = profile.photos?.[0]?.value ?? null;
 
         let [user] = await db
           .select()
@@ -48,9 +49,19 @@ passport.use(
 
           const [newUser] = await db
             .insert(usersTable)
-            .values({ googleId, email, nome, papel: papel as "adm" | "usuario" })
+            .values({ googleId, email, nome, papel: papel as "adm" | "usuario", photoUrl })
             .returning();
           user = newUser;
+        } else {
+          // Update photo if changed
+          if (photoUrl && user.photoUrl !== photoUrl) {
+            const [updated] = await db
+              .update(usersTable)
+              .set({ photoUrl })
+              .where(eq(usersTable.id, user.id))
+              .returning();
+            user = updated;
+          }
         }
 
         return done(null, user);
@@ -76,7 +87,7 @@ router.get(
 router.get("/me", requireAuth, async (req, res) => {
   try {
     const [user] = await db
-      .select({ id: usersTable.id, nome: usersTable.nome, email: usersTable.email, papel: usersTable.papel })
+      .select({ id: usersTable.id, nome: usersTable.nome, email: usersTable.email, papel: usersTable.papel, isBanned: usersTable.isBanned, photoUrl: usersTable.photoUrl })
       .from(usersTable)
       .where(eq(usersTable.id, req.user!.userId))
       .limit(1);

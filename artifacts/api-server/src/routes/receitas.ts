@@ -69,6 +69,7 @@ router.get("/", optionalAuth, async (req, res) => {
     }
 
     if (query.categoriaId) rows = rows.filter(r => r.categoriaId === query.categoriaId);
+    if (query.autorId) rows = rows.filter(r => r.autorId === query.autorId);
     if (query.search) {
       const s = query.search.toLowerCase();
       rows = rows.filter(r => r.titulo.toLowerCase().includes(s));

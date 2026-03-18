@@ -3,6 +3,7 @@ import { Link } from "wouter"
 import { Receita, User } from "@workspace/api-client-react/src/generated/api.schemas"
 import { Heart, Bookmark, Flag, MoreVertical, Edit2, Trash2 } from "lucide-react"
 import { Button } from "./ui/button"
+import { UserAvatar } from "./UserAvatar"
 import { useLikeReceita, useAddFavorito, useRemoveFavorito, getGetReceitasQueryKey } from "@workspace/api-client-react"
 import { useQueryClient } from "@tanstack/react-query"
 import { useToast } from "@/hooks/use-toast"
@@ -30,10 +31,6 @@ export function RecipeCard({ recipe, currentUser, onClick, onEdit, onDelete, onR
   const handleLike = (e: React.MouseEvent) => {
     e.stopPropagation()
     if (!currentUser) return promptLogin()
-    
-    // Optimistic toggle
-    const previousRecipes = queryClient.getQueryData<Receita[]>(getGetReceitasQueryKey())
-    
     like({ receitaId: recipe.id }, {
       onSuccess: () => queryClient.invalidateQueries({ queryKey: getGetReceitasQueryKey() }),
       onError: () => toast({ title: "Erro ao curtir", variant: "destructive" })
@@ -43,7 +40,6 @@ export function RecipeCard({ recipe, currentUser, onClick, onEdit, onDelete, onR
   const handleFavorite = (e: React.MouseEvent) => {
     e.stopPropagation()
     if (!currentUser) return promptLogin()
-    
     if (recipe.isFavorited) {
       remFav({ receitaId: recipe.id }, {
         onSuccess: () => queryClient.invalidateQueries({ queryKey: getGetReceitasQueryKey() })
@@ -150,9 +146,7 @@ export function RecipeCard({ recipe, currentUser, onClick, onEdit, onDelete, onR
 
         <div className="flex items-center justify-between pt-4 border-t border-border/50 mt-auto">
           <Link href={`/usuario/${recipe.autorId}`} onClick={e => e.stopPropagation()} className="flex items-center gap-2 group/author">
-            <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-primary to-accent flex items-center justify-center text-primary-foreground font-bold text-xs shadow-sm">
-              {recipe.autor?.nome?.charAt(0).toUpperCase() || 'U'}
-            </div>
+            <UserAvatar nome={recipe.autor?.nome} photoUrl={recipe.autor?.photoUrl} size="sm" />
             <span className="text-sm font-medium text-foreground group-hover/author:text-primary transition-colors">
               {recipe.autor?.nome}
             </span>

@@ -11,4 +11,5 @@ export type GetReceitasParams = {
   feed?: GetReceitasFeed;
   search?: string;
   categoriaId?: number;
+  autorId?: number;
 };

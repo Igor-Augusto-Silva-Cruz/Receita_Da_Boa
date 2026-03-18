@@ -1241,7 +1241,7 @@ export const useReportReceita = <
 };
 
 /**
- * @summary Get all reported recipes (ADM only)
+ * @summary Get all reported recipes with individual report details (ADM only)
  */
 export const getGetAdminReportsUrl = () => {
   return `/api/admin/reports`;
@@ -1292,7 +1292,7 @@ export type GetAdminReportsQueryResult = NonNullable<
 export type GetAdminReportsQueryError = ErrorType<ErrorResponse>;
 
 /**
- * @summary Get all reported recipes (ADM only)
+ * @summary Get all reported recipes with individual report details (ADM only)
  */
 
 export function useGetAdminReports<

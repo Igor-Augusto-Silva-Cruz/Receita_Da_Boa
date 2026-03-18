@@ -12,7 +12,7 @@ router.get("/:id", optionalAuth, async (req, res) => {
     const currentUserId = req.user?.userId;
 
     const [user] = await db
-      .select({ id: usersTable.id, nome: usersTable.nome, email: usersTable.email, papel: usersTable.papel, isBanned: usersTable.isBanned })
+      .select({ id: usersTable.id, nome: usersTable.nome, email: usersTable.email, papel: usersTable.papel, isBanned: usersTable.isBanned, photoUrl: usersTable.photoUrl })
       .from(usersTable)
       .where(eq(usersTable.id, id))
       .limit(1);

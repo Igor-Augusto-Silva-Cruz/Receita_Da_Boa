@@ -11,6 +11,7 @@ export const usersTable = pgTable("users", {
   googleId: text("google_id").notNull().unique(),
   papel: papelEnum("papel").notNull().default("usuario"),
   isBanned: boolean("is_banned").notNull().default(false),
+  photoUrl: text("photo_url"),
 });
 
 export const categoriasTable = pgTable("categorias", {

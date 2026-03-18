@@ -4,6 +4,7 @@ import { User, Categoria } from "@workspace/api-client-react/src/generated/api.s
 import { ChefHat, Search, LayoutGrid, Heart, Flame, Users, ShieldAlert, Plus, LogIn, LogOut, X } from "lucide-react"
 import { Button } from "./ui/button"
 import { Input } from "./ui/input"
+import { UserAvatar } from "./UserAvatar"
 import { cn } from "@/lib/utils"
 
 interface Props {
@@ -172,9 +173,7 @@ export function Sidebar({ user, categories, search, setSearch, activeFeed, setAc
           {user ? (
             <div className="bg-white/80 dark:bg-black/40 rounded-2xl p-4 border border-border shadow-sm flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-primary to-accent flex items-center justify-center text-primary-foreground font-bold text-sm">
-                  {user.nome.charAt(0).toUpperCase()}
-                </div>
+                <UserAvatar nome={user.nome} photoUrl={user.photoUrl} size="sm" />
                 <div>
                   <p className="font-bold text-sm text-foreground line-clamp-1">{user.nome}</p>
                   <p className="text-xs text-muted-foreground capitalize">{user.papel}</p>

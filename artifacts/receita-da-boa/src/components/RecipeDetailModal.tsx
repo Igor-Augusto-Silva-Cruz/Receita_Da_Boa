@@ -2,6 +2,7 @@ import * as React from "react"
 import { Link } from "wouter"
 import { Receita, User } from "@workspace/api-client-react/src/generated/api.schemas"
 import { Dialog } from "./ui/dialog"
+import { UserAvatar } from "./UserAvatar"
 import { Heart, Bookmark, Flag, ChefHat, Clock, Users } from "lucide-react"
 import { Button } from "./ui/button"
 import { useLikeReceita, useAddFavorito, useRemoveFavorito, getGetReceitasQueryKey, getGetReceitaQueryKey } from "@workspace/api-client-react"
@@ -88,9 +89,7 @@ export function RecipeDetailModal({ isOpen, onClose, recipe, currentUser, onRepo
               <h2 className="text-4xl font-display font-bold text-foreground mb-4 leading-tight">{recipe.titulo}</h2>
               <div className="flex items-center gap-4 text-sm text-muted-foreground">
                 <Link href={`/usuario/${recipe.autorId}`} onClick={onClose} className="flex items-center gap-2 hover:text-primary transition-colors font-medium text-foreground">
-                  <div className="w-6 h-6 rounded-full bg-gradient-to-tr from-primary to-accent flex items-center justify-center text-white text-[10px]">
-                    {recipe.autor?.nome?.charAt(0).toUpperCase()}
-                  </div>
+                  <UserAvatar nome={recipe.autor?.nome} photoUrl={recipe.autor?.photoUrl} size="xs" />
                   {recipe.autor?.nome}
                 </Link>
                 <span>•</span>

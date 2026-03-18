@@ -13,4 +13,5 @@ export interface User {
   email: string;
   papel: UserPapel;
   isBanned: boolean;
+  photoUrl?: string | null;
 }

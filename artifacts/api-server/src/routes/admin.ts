@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { db, receitasTable, usersTable, reportsTable, favoritosTable, likesTable, categoriasTable } from "@workspace/db";
-import { eq, count } from "drizzle-orm";
+import { eq, count, sql } from "drizzle-orm";
 import { requireAuth, requireAdm } from "../middlewares/auth.js";
 import { AdminDeleteReceitaParams, BanUsuarioParams } from "@workspace/api-zod";
 
@@ -14,27 +14,54 @@ router.get("/reports", async (_req, res) => {
       .select({
         id: receitasTable.id,
         titulo: receitasTable.titulo,
+        descricao: receitasTable.descricao,
+        ingredientes: receitasTable.ingredientes,
+        instrucoes: receitasTable.instrucoes,
+        urlImagem: receitasTable.urlImagem,
         autorId: receitasTable.autorId,
         isReported: receitasTable.isReported,
-        autor: { id: usersTable.id, nome: usersTable.nome, email: usersTable.email, papel: usersTable.papel, isBanned: usersTable.isBanned },
+        createdAt: receitasTable.createdAt,
+        autor: { id: usersTable.id, nome: usersTable.nome, email: usersTable.email, papel: usersTable.papel, isBanned: usersTable.isBanned, photoUrl: usersTable.photoUrl },
         categoria: { id: categoriasTable.id, nome: categoriasTable.nome },
+        likeCount: sql<number>`(SELECT COUNT(*) FROM likes WHERE likes.receita_id = ${receitasTable.id})`.mapWith(Number),
       })
       .from(receitasTable)
       .leftJoin(usersTable, eq(receitasTable.autorId, usersTable.id))
       .leftJoin(categoriasTable, eq(receitasTable.categoriaId, categoriasTable.id))
       .where(eq(receitasTable.isReported, true));
 
-    const withCounts = await Promise.all(
+    const withReports = await Promise.all(
       reported.map(async (r) => {
-        const [{ total }] = await db
-          .select({ total: count() })
+        const reportRows = await db
+          .select({
+            id: reportsTable.id,
+            motivo: reportsTable.motivo,
+            userId: reportsTable.userId,
+            createdAt: reportsTable.createdAt,
+            denunciante: {
+              id: usersTable.id,
+              nome: usersTable.nome,
+              email: usersTable.email,
+              papel: usersTable.papel,
+              isBanned: usersTable.isBanned,
+              photoUrl: usersTable.photoUrl,
+            },
+          })
           .from(reportsTable)
+          .leftJoin(usersTable, eq(reportsTable.userId, usersTable.id))
           .where(eq(reportsTable.receitaId, r.id));
-        return { ...r, reportCount: total };
+
+        return {
+          ...r,
+          reportCount: reportRows.length,
+          isLiked: false,
+          isFavorited: false,
+          reports: reportRows,
+        };
       })
     );
 
-    res.json(withCounts.sort((a, b) => b.reportCount - a.reportCount));
+    res.json(withReports.sort((a, b) => b.reportCount - a.reportCount));
   } catch {
     res.status(500).json({ error: "Erro ao buscar denúncias" });
   }
