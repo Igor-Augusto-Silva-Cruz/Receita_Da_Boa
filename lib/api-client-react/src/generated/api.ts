@@ -3,7 +3,7 @@
  * Do not edit manually.
  * Api
  * Receita da Boa - Social Recipe Network API
- * OpenAPI spec version: 0.2.0
+ * OpenAPI spec version: 0.3.0
  */
 import { useMutation, useQuery } from "@tanstack/react-query";
 import type {
@@ -18,7 +18,9 @@ import type {
 
 import type {
   Categoria,
+  Comentario,
   CreateCategoriaInput,
+  CreateComentarioInput,
   CreateReceitaInput,
   ErrorResponse,
   FavoritoInput,
@@ -29,6 +31,7 @@ import type {
   MessageResponse,
   Receita,
   ReportInput,
+  ReportedComentario,
   ReportedReceita,
   User,
   UserProfile,
@@ -43,9 +46,6 @@ type Awaited<O> = O extends AwaitedInput<infer T> ? T : never;
 
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
-/**
- * @summary Health check
- */
 export const getHealthCheckUrl = () => {
   return `/api/healthz`;
 };
@@ -93,10 +93,6 @@ export type HealthCheckQueryResult = NonNullable<
   Awaited<ReturnType<typeof healthCheck>>
 >;
 export type HealthCheckQueryError = ErrorType<unknown>;
-
-/**
- * @summary Health check
- */
 
 export function useHealthCheck<
   TData = Awaited<ReturnType<typeof healthCheck>>,
@@ -174,9 +170,6 @@ export function useGetMe<
   return { ...query, queryKey: queryOptions.queryKey };
 }
 
-/**
- * @summary List recipes
- */
 export const getGetReceitasUrl = (params?: GetReceitasParams) => {
   const normalizedParams = new URLSearchParams();
 
@@ -241,10 +234,6 @@ export type GetReceitasQueryResult = NonNullable<
 >;
 export type GetReceitasQueryError = ErrorType<unknown>;
 
-/**
- * @summary List recipes
- */
-
 export function useGetReceitas<
   TData = Awaited<ReturnType<typeof getReceitas>>,
   TError = ErrorType<unknown>,
@@ -268,9 +257,6 @@ export function useGetReceitas<
   return { ...query, queryKey: queryOptions.queryKey };
 }
 
-/**
- * @summary Create a recipe (any logged-in user)
- */
 export const getCreateReceitaUrl = () => {
   return `/api/receitas`;
 };
@@ -288,7 +274,7 @@ export const createReceita = async (
 };
 
 export const getCreateReceitaMutationOptions = <
-  TError = ErrorType<ErrorResponse>,
+  TError = ErrorType<unknown>,
   TContext = unknown,
 >(options?: {
   mutation?: UseMutationOptions<
@@ -329,13 +315,10 @@ export type CreateReceitaMutationResult = NonNullable<
   Awaited<ReturnType<typeof createReceita>>
 >;
 export type CreateReceitaMutationBody = BodyType<CreateReceitaInput>;
-export type CreateReceitaMutationError = ErrorType<ErrorResponse>;
+export type CreateReceitaMutationError = ErrorType<unknown>;
 
-/**
- * @summary Create a recipe (any logged-in user)
- */
 export const useCreateReceita = <
-  TError = ErrorType<ErrorResponse>,
+  TError = ErrorType<unknown>,
   TContext = unknown,
 >(options?: {
   mutation?: UseMutationOptions<
@@ -354,9 +337,6 @@ export const useCreateReceita = <
   return useMutation(getCreateReceitaMutationOptions(options));
 };
 
-/**
- * @summary Get recipe by ID
- */
 export const getGetReceitaUrl = (id: number) => {
   return `/api/receitas/${id}`;
 };
@@ -414,10 +394,6 @@ export type GetReceitaQueryResult = NonNullable<
 >;
 export type GetReceitaQueryError = ErrorType<ErrorResponse>;
 
-/**
- * @summary Get recipe by ID
- */
-
 export function useGetReceita<
   TData = Awaited<ReturnType<typeof getReceita>>,
   TError = ErrorType<ErrorResponse>,
@@ -441,9 +417,6 @@ export function useGetReceita<
   return { ...query, queryKey: queryOptions.queryKey };
 }
 
-/**
- * @summary Update own recipe
- */
 export const getUpdateReceitaUrl = (id: number) => {
   return `/api/receitas/${id}`;
 };
@@ -462,7 +435,7 @@ export const updateReceita = async (
 };
 
 export const getUpdateReceitaMutationOptions = <
-  TError = ErrorType<ErrorResponse>,
+  TError = ErrorType<unknown>,
   TContext = unknown,
 >(options?: {
   mutation?: UseMutationOptions<
@@ -503,13 +476,10 @@ export type UpdateReceitaMutationResult = NonNullable<
   Awaited<ReturnType<typeof updateReceita>>
 >;
 export type UpdateReceitaMutationBody = BodyType<CreateReceitaInput>;
-export type UpdateReceitaMutationError = ErrorType<ErrorResponse>;
+export type UpdateReceitaMutationError = ErrorType<unknown>;
 
-/**
- * @summary Update own recipe
- */
 export const useUpdateReceita = <
-  TError = ErrorType<ErrorResponse>,
+  TError = ErrorType<unknown>,
   TContext = unknown,
 >(options?: {
   mutation?: UseMutationOptions<
@@ -528,9 +498,6 @@ export const useUpdateReceita = <
   return useMutation(getUpdateReceitaMutationOptions(options));
 };
 
-/**
- * @summary Delete own recipe
- */
 export const getDeleteReceitaUrl = (id: number) => {
   return `/api/receitas/${id}`;
 };
@@ -546,7 +513,7 @@ export const deleteReceita = async (
 };
 
 export const getDeleteReceitaMutationOptions = <
-  TError = ErrorType<ErrorResponse>,
+  TError = ErrorType<unknown>,
   TContext = unknown,
 >(options?: {
   mutation?: UseMutationOptions<
@@ -587,13 +554,10 @@ export type DeleteReceitaMutationResult = NonNullable<
   Awaited<ReturnType<typeof deleteReceita>>
 >;
 
-export type DeleteReceitaMutationError = ErrorType<ErrorResponse>;
+export type DeleteReceitaMutationError = ErrorType<unknown>;
 
-/**
- * @summary Delete own recipe
- */
 export const useDeleteReceita = <
-  TError = ErrorType<ErrorResponse>,
+  TError = ErrorType<unknown>,
   TContext = unknown,
 >(options?: {
   mutation?: UseMutationOptions<
@@ -986,9 +950,6 @@ export const useRemoveFavorito = <
   return useMutation(getRemoveFavoritoMutationOptions(options));
 };
 
-/**
- * @summary Like a recipe
- */
 export const getLikeReceitaUrl = (receitaId: number) => {
   return `/api/likes/${receitaId}`;
 };
@@ -1004,7 +965,7 @@ export const likeReceita = async (
 };
 
 export const getLikeReceitaMutationOptions = <
-  TError = ErrorType<ErrorResponse>,
+  TError = ErrorType<unknown>,
   TContext = unknown,
 >(options?: {
   mutation?: UseMutationOptions<
@@ -1045,13 +1006,10 @@ export type LikeReceitaMutationResult = NonNullable<
   Awaited<ReturnType<typeof likeReceita>>
 >;
 
-export type LikeReceitaMutationError = ErrorType<ErrorResponse>;
+export type LikeReceitaMutationError = ErrorType<unknown>;
 
-/**
- * @summary Like a recipe
- */
 export const useLikeReceita = <
-  TError = ErrorType<ErrorResponse>,
+  TError = ErrorType<unknown>,
   TContext = unknown,
 >(options?: {
   mutation?: UseMutationOptions<
@@ -1070,9 +1028,6 @@ export const useLikeReceita = <
   return useMutation(getLikeReceitaMutationOptions(options));
 };
 
-/**
- * @summary Follow or unfollow a user
- */
 export const getFollowUserUrl = (userId: number) => {
   return `/api/follows/${userId}`;
 };
@@ -1088,7 +1043,7 @@ export const followUser = async (
 };
 
 export const getFollowUserMutationOptions = <
-  TError = ErrorType<ErrorResponse>,
+  TError = ErrorType<unknown>,
   TContext = unknown,
 >(options?: {
   mutation?: UseMutationOptions<
@@ -1129,13 +1084,10 @@ export type FollowUserMutationResult = NonNullable<
   Awaited<ReturnType<typeof followUser>>
 >;
 
-export type FollowUserMutationError = ErrorType<ErrorResponse>;
+export type FollowUserMutationError = ErrorType<unknown>;
 
-/**
- * @summary Follow or unfollow a user
- */
 export const useFollowUser = <
-  TError = ErrorType<ErrorResponse>,
+  TError = ErrorType<unknown>,
   TContext = unknown,
 >(options?: {
   mutation?: UseMutationOptions<
@@ -1155,42 +1107,131 @@ export const useFollowUser = <
 };
 
 /**
- * @summary Report a recipe
+ * @summary Get comments for a recipe
  */
-export const getReportReceitaUrl = () => {
-  return `/api/reports`;
+export const getGetComentariosUrl = (receitaId: number) => {
+  return `/api/comentarios/${receitaId}`;
 };
 
-export const reportReceita = async (
-  reportInput: ReportInput,
+export const getComentarios = async (
+  receitaId: number,
   options?: RequestInit,
-): Promise<MessageResponse> => {
-  return customFetch<MessageResponse>(getReportReceitaUrl(), {
+): Promise<Comentario[]> => {
+  return customFetch<Comentario[]>(getGetComentariosUrl(receitaId), {
     ...options,
-    method: "POST",
-    headers: { "Content-Type": "application/json", ...options?.headers },
-    body: JSON.stringify(reportInput),
+    method: "GET",
   });
 };
 
-export const getReportReceitaMutationOptions = <
+export const getGetComentariosQueryKey = (receitaId: number) => {
+  return [`/api/comentarios/${receitaId}`] as const;
+};
+
+export const getGetComentariosQueryOptions = <
+  TData = Awaited<ReturnType<typeof getComentarios>>,
+  TError = ErrorType<unknown>,
+>(
+  receitaId: number,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getComentarios>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getGetComentariosQueryKey(receitaId);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getComentarios>>> = ({
+    signal,
+  }) => getComentarios(receitaId, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: !!receitaId,
+    ...queryOptions,
+  } as UseQueryOptions<
+    Awaited<ReturnType<typeof getComentarios>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetComentariosQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getComentarios>>
+>;
+export type GetComentariosQueryError = ErrorType<unknown>;
+
+/**
+ * @summary Get comments for a recipe
+ */
+
+export function useGetComentarios<
+  TData = Awaited<ReturnType<typeof getComentarios>>,
+  TError = ErrorType<unknown>,
+>(
+  receitaId: number,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getComentarios>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetComentariosQueryOptions(receitaId, options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Post a comment
+ */
+export const getCreateComentarioUrl = (receitaId: number) => {
+  return `/api/comentarios/${receitaId}`;
+};
+
+export const createComentario = async (
+  receitaId: number,
+  createComentarioInput: CreateComentarioInput,
+  options?: RequestInit,
+): Promise<Comentario> => {
+  return customFetch<Comentario>(getCreateComentarioUrl(receitaId), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(createComentarioInput),
+  });
+};
+
+export const getCreateComentarioMutationOptions = <
   TError = ErrorType<unknown>,
   TContext = unknown,
 >(options?: {
   mutation?: UseMutationOptions<
-    Awaited<ReturnType<typeof reportReceita>>,
+    Awaited<ReturnType<typeof createComentario>>,
     TError,
-    { data: BodyType<ReportInput> },
+    { receitaId: number; data: BodyType<CreateComentarioInput> },
     TContext
   >;
   request?: SecondParameter<typeof customFetch>;
 }): UseMutationOptions<
-  Awaited<ReturnType<typeof reportReceita>>,
+  Awaited<ReturnType<typeof createComentario>>,
   TError,
-  { data: BodyType<ReportInput> },
+  { receitaId: number; data: BodyType<CreateComentarioInput> },
   TContext
 > => {
-  const mutationKey = ["reportReceita"];
+  const mutationKey = ["createComentario"];
   const { mutation: mutationOptions, request: requestOptions } = options
     ? options.mutation &&
       "mutationKey" in options.mutation &&
@@ -1200,48 +1241,218 @@ export const getReportReceitaMutationOptions = <
     : { mutation: { mutationKey }, request: undefined };
 
   const mutationFn: MutationFunction<
-    Awaited<ReturnType<typeof reportReceita>>,
-    { data: BodyType<ReportInput> }
+    Awaited<ReturnType<typeof createComentario>>,
+    { receitaId: number; data: BodyType<CreateComentarioInput> }
   > = (props) => {
-    const { data } = props ?? {};
+    const { receitaId, data } = props ?? {};
 
-    return reportReceita(data, requestOptions);
+    return createComentario(receitaId, data, requestOptions);
   };
 
   return { mutationFn, ...mutationOptions };
 };
 
-export type ReportReceitaMutationResult = NonNullable<
-  Awaited<ReturnType<typeof reportReceita>>
+export type CreateComentarioMutationResult = NonNullable<
+  Awaited<ReturnType<typeof createComentario>>
 >;
-export type ReportReceitaMutationBody = BodyType<ReportInput>;
-export type ReportReceitaMutationError = ErrorType<unknown>;
+export type CreateComentarioMutationBody = BodyType<CreateComentarioInput>;
+export type CreateComentarioMutationError = ErrorType<unknown>;
 
 /**
- * @summary Report a recipe
+ * @summary Post a comment
  */
-export const useReportReceita = <
+export const useCreateComentario = <
   TError = ErrorType<unknown>,
   TContext = unknown,
 >(options?: {
   mutation?: UseMutationOptions<
-    Awaited<ReturnType<typeof reportReceita>>,
+    Awaited<ReturnType<typeof createComentario>>,
+    TError,
+    { receitaId: number; data: BodyType<CreateComentarioInput> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof createComentario>>,
+  TError,
+  { receitaId: number; data: BodyType<CreateComentarioInput> },
+  TContext
+> => {
+  return useMutation(getCreateComentarioMutationOptions(options));
+};
+
+/**
+ * @summary Delete own comment (or admin)
+ */
+export const getDeleteComentarioUrl = (id: number) => {
+  return `/api/comentarios/${id}/delete`;
+};
+
+export const deleteComentario = async (
+  id: number,
+  options?: RequestInit,
+): Promise<MessageResponse> => {
+  return customFetch<MessageResponse>(getDeleteComentarioUrl(id), {
+    ...options,
+    method: "POST",
+  });
+};
+
+export const getDeleteComentarioMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof deleteComentario>>,
+    TError,
+    { id: number },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof deleteComentario>>,
+  TError,
+  { id: number },
+  TContext
+> => {
+  const mutationKey = ["deleteComentario"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof deleteComentario>>,
+    { id: number }
+  > = (props) => {
+    const { id } = props ?? {};
+
+    return deleteComentario(id, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type DeleteComentarioMutationResult = NonNullable<
+  Awaited<ReturnType<typeof deleteComentario>>
+>;
+
+export type DeleteComentarioMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Delete own comment (or admin)
+ */
+export const useDeleteComentario = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof deleteComentario>>,
+    TError,
+    { id: number },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof deleteComentario>>,
+  TError,
+  { id: number },
+  TContext
+> => {
+  return useMutation(getDeleteComentarioMutationOptions(options));
+};
+
+/**
+ * @summary Report a recipe or a comment
+ */
+export const getReportContentUrl = () => {
+  return `/api/reports`;
+};
+
+export const reportContent = async (
+  reportInput: ReportInput,
+  options?: RequestInit,
+): Promise<MessageResponse> => {
+  return customFetch<MessageResponse>(getReportContentUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(reportInput),
+  });
+};
+
+export const getReportContentMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof reportContent>>,
+    TError,
+    { data: BodyType<ReportInput> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof reportContent>>,
+  TError,
+  { data: BodyType<ReportInput> },
+  TContext
+> => {
+  const mutationKey = ["reportContent"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof reportContent>>,
+    { data: BodyType<ReportInput> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return reportContent(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type ReportContentMutationResult = NonNullable<
+  Awaited<ReturnType<typeof reportContent>>
+>;
+export type ReportContentMutationBody = BodyType<ReportInput>;
+export type ReportContentMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Report a recipe or a comment
+ */
+export const useReportContent = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof reportContent>>,
     TError,
     { data: BodyType<ReportInput> },
     TContext
   >;
   request?: SecondParameter<typeof customFetch>;
 }): UseMutationResult<
-  Awaited<ReturnType<typeof reportReceita>>,
+  Awaited<ReturnType<typeof reportContent>>,
   TError,
   { data: BodyType<ReportInput> },
   TContext
 > => {
-  return useMutation(getReportReceitaMutationOptions(options));
+  return useMutation(getReportContentMutationOptions(options));
 };
 
 /**
- * @summary Get all reported recipes with individual report details (ADM only)
+ * @summary Get all reported recipes (ADM only)
  */
 export const getGetAdminReportsUrl = () => {
   return `/api/admin/reports`;
@@ -1262,7 +1473,7 @@ export const getGetAdminReportsQueryKey = () => {
 
 export const getGetAdminReportsQueryOptions = <
   TData = Awaited<ReturnType<typeof getAdminReports>>,
-  TError = ErrorType<ErrorResponse>,
+  TError = ErrorType<unknown>,
 >(options?: {
   query?: UseQueryOptions<
     Awaited<ReturnType<typeof getAdminReports>>,
@@ -1289,15 +1500,15 @@ export const getGetAdminReportsQueryOptions = <
 export type GetAdminReportsQueryResult = NonNullable<
   Awaited<ReturnType<typeof getAdminReports>>
 >;
-export type GetAdminReportsQueryError = ErrorType<ErrorResponse>;
+export type GetAdminReportsQueryError = ErrorType<unknown>;
 
 /**
- * @summary Get all reported recipes with individual report details (ADM only)
+ * @summary Get all reported recipes (ADM only)
  */
 
 export function useGetAdminReports<
   TData = Awaited<ReturnType<typeof getAdminReports>>,
-  TError = ErrorType<ErrorResponse>,
+  TError = ErrorType<unknown>,
 >(options?: {
   query?: UseQueryOptions<
     Awaited<ReturnType<typeof getAdminReports>>,
@@ -1316,8 +1527,81 @@ export function useGetAdminReports<
 }
 
 /**
- * @summary Admin delete any recipe
+ * @summary Get all reported comments (ADM only)
  */
+export const getGetAdminComentarioReportsUrl = () => {
+  return `/api/admin/reports/comentarios`;
+};
+
+export const getAdminComentarioReports = async (
+  options?: RequestInit,
+): Promise<ReportedComentario[]> => {
+  return customFetch<ReportedComentario[]>(getGetAdminComentarioReportsUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetAdminComentarioReportsQueryKey = () => {
+  return [`/api/admin/reports/comentarios`] as const;
+};
+
+export const getGetAdminComentarioReportsQueryOptions = <
+  TData = Awaited<ReturnType<typeof getAdminComentarioReports>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof getAdminComentarioReports>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getGetAdminComentarioReportsQueryKey();
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof getAdminComentarioReports>>
+  > = ({ signal }) => getAdminComentarioReports({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getAdminComentarioReports>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetAdminComentarioReportsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getAdminComentarioReports>>
+>;
+export type GetAdminComentarioReportsQueryError = ErrorType<unknown>;
+
+/**
+ * @summary Get all reported comments (ADM only)
+ */
+
+export function useGetAdminComentarioReports<
+  TData = Awaited<ReturnType<typeof getAdminComentarioReports>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof getAdminComentarioReports>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetAdminComentarioReportsQueryOptions(options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
 export const getAdminDeleteReceitaUrl = (id: number) => {
   return `/api/admin/receitas/${id}`;
 };
@@ -1376,9 +1660,6 @@ export type AdminDeleteReceitaMutationResult = NonNullable<
 
 export type AdminDeleteReceitaMutationError = ErrorType<unknown>;
 
-/**
- * @summary Admin delete any recipe
- */
 export const useAdminDeleteReceita = <
   TError = ErrorType<unknown>,
   TContext = unknown,
@@ -1400,8 +1681,89 @@ export const useAdminDeleteReceita = <
 };
 
 /**
- * @summary Ban a user (ADM only)
+ * @summary Admin delete any comment
  */
+export const getAdminDeleteComentarioUrl = (id: number) => {
+  return `/api/admin/comentarios/${id}`;
+};
+
+export const adminDeleteComentario = async (
+  id: number,
+  options?: RequestInit,
+): Promise<MessageResponse> => {
+  return customFetch<MessageResponse>(getAdminDeleteComentarioUrl(id), {
+    ...options,
+    method: "DELETE",
+  });
+};
+
+export const getAdminDeleteComentarioMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof adminDeleteComentario>>,
+    TError,
+    { id: number },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof adminDeleteComentario>>,
+  TError,
+  { id: number },
+  TContext
+> => {
+  const mutationKey = ["adminDeleteComentario"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof adminDeleteComentario>>,
+    { id: number }
+  > = (props) => {
+    const { id } = props ?? {};
+
+    return adminDeleteComentario(id, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type AdminDeleteComentarioMutationResult = NonNullable<
+  Awaited<ReturnType<typeof adminDeleteComentario>>
+>;
+
+export type AdminDeleteComentarioMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Admin delete any comment
+ */
+export const useAdminDeleteComentario = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof adminDeleteComentario>>,
+    TError,
+    { id: number },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof adminDeleteComentario>>,
+  TError,
+  { id: number },
+  TContext
+> => {
+  return useMutation(getAdminDeleteComentarioMutationOptions(options));
+};
+
 export const getBanUsuarioUrl = (id: number) => {
   return `/api/admin/usuarios/${id}/ban`;
 };
@@ -1460,9 +1822,6 @@ export type BanUsuarioMutationResult = NonNullable<
 
 export type BanUsuarioMutationError = ErrorType<unknown>;
 
-/**
- * @summary Ban a user (ADM only)
- */
 export const useBanUsuario = <
   TError = ErrorType<unknown>,
   TContext = unknown,
@@ -1483,9 +1842,6 @@ export const useBanUsuario = <
   return useMutation(getBanUsuarioMutationOptions(options));
 };
 
-/**
- * @summary Get user profile
- */
 export const getGetUsuarioUrl = (id: number) => {
   return `/api/usuarios/${id}`;
 };
@@ -1542,10 +1898,6 @@ export type GetUsuarioQueryResult = NonNullable<
   Awaited<ReturnType<typeof getUsuario>>
 >;
 export type GetUsuarioQueryError = ErrorType<ErrorResponse>;
-
-/**
- * @summary Get user profile
- */
 
 export function useGetUsuario<
   TData = Awaited<ReturnType<typeof getUsuario>>,

@@ -3,7 +3,7 @@
  * Do not edit manually.
  * Api
  * Receita da Boa - Social Recipe Network API
- * OpenAPI spec version: 0.2.0
+ * OpenAPI spec version: 0.3.0
  */
 export interface HealthStatus {
   status: string;
@@ -86,6 +86,16 @@ export interface Receita {
   createdAt: string;
 }
 
+export interface Comentario {
+  id: number;
+  userId: number;
+  receitaId: number;
+  texto: string;
+  isReported: boolean;
+  createdAt: string;
+  autor?: User | null;
+}
+
 export interface ReportEntry {
   id: number;
   motivo: string;
@@ -113,6 +123,24 @@ export interface ReportedReceita {
   reports: ReportEntry[];
 }
 
+export type ReportedComentarioReceita = {
+  id?: number;
+  titulo?: string;
+} | null;
+
+export interface ReportedComentario {
+  id: number;
+  texto: string;
+  userId: number;
+  receitaId: number;
+  isReported: boolean;
+  reportCount: number;
+  createdAt?: string;
+  autor?: User | null;
+  receita?: ReportedComentarioReceita;
+  reports: ReportEntry[];
+}
+
 export interface CreateReceitaInput {
   titulo: string;
   descricao: string;
@@ -130,8 +158,13 @@ export interface FavoritoInput {
   receitaId: number;
 }
 
+export interface CreateComentarioInput {
+  texto: string;
+}
+
 export interface ReportInput {
-  receitaId: number;
+  receitaId?: number | null;
+  comentarioId?: number | null;
   motivo: string;
 }
 

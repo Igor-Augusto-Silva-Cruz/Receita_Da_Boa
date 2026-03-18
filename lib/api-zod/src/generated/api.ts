@@ -3,13 +3,10 @@
  * Do not edit manually.
  * Api
  * Receita da Boa - Social Recipe Network API
- * OpenAPI spec version: 0.2.0
+ * OpenAPI spec version: 0.3.0
  */
 import * as zod from "zod";
 
-/**
- * @summary Health check
- */
 export const HealthCheckResponse = zod.object({
   status: zod.string(),
 });
@@ -23,9 +20,6 @@ export const GetMeResponse = zod.object({
   photoUrl: zod.string().nullish(),
 });
 
-/**
- * @summary List recipes
- */
 export const GetReceitasQueryParams = zod.object({
   feed: zod.enum(["recentes", "seguindo", "populares"]).optional(),
   search: zod.coerce.string().optional(),
@@ -66,9 +60,6 @@ export const GetReceitasResponseItem = zod.object({
 });
 export const GetReceitasResponse = zod.array(GetReceitasResponseItem);
 
-/**
- * @summary Create a recipe (any logged-in user)
- */
 export const CreateReceitaBody = zod.object({
   titulo: zod.string(),
   descricao: zod.string(),
@@ -78,9 +69,6 @@ export const CreateReceitaBody = zod.object({
   categoriaId: zod.number().nullish(),
 });
 
-/**
- * @summary Get recipe by ID
- */
 export const GetReceitaParams = zod.object({
   id: zod.coerce.number(),
 });
@@ -117,9 +105,6 @@ export const GetReceitaResponse = zod.object({
   createdAt: zod.string(),
 });
 
-/**
- * @summary Update own recipe
- */
 export const UpdateReceitaParams = zod.object({
   id: zod.coerce.number(),
 });
@@ -165,9 +150,6 @@ export const UpdateReceitaResponse = zod.object({
   createdAt: zod.string(),
 });
 
-/**
- * @summary Delete own recipe
- */
 export const DeleteReceitaParams = zod.object({
   id: zod.coerce.number(),
 });
@@ -231,9 +213,6 @@ export const RemoveFavoritoResponse = zod.object({
   message: zod.string(),
 });
 
-/**
- * @summary Like a recipe
- */
 export const LikeReceitaParams = zod.object({
   receitaId: zod.coerce.number(),
 });
@@ -243,9 +222,6 @@ export const LikeReceitaResponse = zod.object({
   likeCount: zod.number(),
 });
 
-/**
- * @summary Follow or unfollow a user
- */
 export const FollowUserParams = zod.object({
   userId: zod.coerce.number(),
 });
@@ -255,15 +231,65 @@ export const FollowUserResponse = zod.object({
 });
 
 /**
- * @summary Report a recipe
+ * @summary Get comments for a recipe
  */
-export const ReportReceitaBody = zod.object({
+export const GetComentariosParams = zod.object({
+  receitaId: zod.coerce.number(),
+});
+
+export const GetComentariosResponseItem = zod.object({
+  id: zod.number(),
+  userId: zod.number(),
   receitaId: zod.number(),
+  texto: zod.string(),
+  isReported: zod.boolean(),
+  createdAt: zod.string(),
+  autor: zod
+    .object({
+      id: zod.number(),
+      nome: zod.string(),
+      email: zod.string(),
+      papel: zod.enum(["usuario", "adm"]),
+      isBanned: zod.boolean(),
+      photoUrl: zod.string().nullish(),
+    })
+    .nullish(),
+});
+export const GetComentariosResponse = zod.array(GetComentariosResponseItem);
+
+/**
+ * @summary Post a comment
+ */
+export const CreateComentarioParams = zod.object({
+  receitaId: zod.coerce.number(),
+});
+
+export const CreateComentarioBody = zod.object({
+  texto: zod.string(),
+});
+
+/**
+ * @summary Delete own comment (or admin)
+ */
+export const DeleteComentarioParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const DeleteComentarioResponse = zod.object({
+  message: zod.string(),
+});
+
+/**
+ * @summary Report a recipe or a comment
+ */
+export const ReportContentBody = zod.object({
+  receitaId: zod.number().nullish(),
+  comentarioId: zod.number().nullish(),
   motivo: zod.string(),
 });
 
 /**
- * @summary Get all reported recipes with individual report details (ADM only)
+ * @summary Get all reported recipes (ADM only)
  */
 export const GetAdminReportsResponseItem = zod.object({
   id: zod.number(),
@@ -317,8 +343,55 @@ export const GetAdminReportsResponseItem = zod.object({
 export const GetAdminReportsResponse = zod.array(GetAdminReportsResponseItem);
 
 /**
- * @summary Admin delete any recipe
+ * @summary Get all reported comments (ADM only)
  */
+export const GetAdminComentarioReportsResponseItem = zod.object({
+  id: zod.number(),
+  texto: zod.string(),
+  userId: zod.number(),
+  receitaId: zod.number(),
+  isReported: zod.boolean(),
+  reportCount: zod.number(),
+  createdAt: zod.string().optional(),
+  autor: zod
+    .object({
+      id: zod.number(),
+      nome: zod.string(),
+      email: zod.string(),
+      papel: zod.enum(["usuario", "adm"]),
+      isBanned: zod.boolean(),
+      photoUrl: zod.string().nullish(),
+    })
+    .nullish(),
+  receita: zod
+    .object({
+      id: zod.number().optional(),
+      titulo: zod.string().optional(),
+    })
+    .nullish(),
+  reports: zod.array(
+    zod.object({
+      id: zod.number(),
+      motivo: zod.string(),
+      userId: zod.number(),
+      createdAt: zod.string(),
+      denunciante: zod
+        .object({
+          id: zod.number(),
+          nome: zod.string(),
+          email: zod.string(),
+          papel: zod.enum(["usuario", "adm"]),
+          isBanned: zod.boolean(),
+          photoUrl: zod.string().nullish(),
+        })
+        .nullish(),
+    }),
+  ),
+});
+export const GetAdminComentarioReportsResponse = zod.array(
+  GetAdminComentarioReportsResponseItem,
+);
+
 export const AdminDeleteReceitaParams = zod.object({
   id: zod.coerce.number(),
 });
@@ -328,8 +401,16 @@ export const AdminDeleteReceitaResponse = zod.object({
 });
 
 /**
- * @summary Ban a user (ADM only)
+ * @summary Admin delete any comment
  */
+export const AdminDeleteComentarioParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const AdminDeleteComentarioResponse = zod.object({
+  message: zod.string(),
+});
+
 export const BanUsuarioParams = zod.object({
   id: zod.coerce.number(),
 });
@@ -338,9 +419,6 @@ export const BanUsuarioResponse = zod.object({
   message: zod.string(),
 });
 
-/**
- * @summary Get user profile
- */
 export const GetUsuarioParams = zod.object({
   id: zod.coerce.number(),
 });

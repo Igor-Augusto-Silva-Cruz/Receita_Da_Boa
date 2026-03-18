@@ -5,25 +5,19 @@
  * Receita da Boa - Social Recipe Network API
  * OpenAPI spec version: 0.3.0
  */
-import type { Categoria } from "./categoria";
+import type { ReportedComentarioReceita } from "./reportedComentarioReceita";
 import type { ReportEntry } from "./reportEntry";
 import type { User } from "./user";
 
-export interface ReportedReceita {
+export interface ReportedComentario {
   id: number;
-  titulo: string;
-  descricao?: string;
-  ingredientes?: string;
-  instrucoes?: string;
-  urlImagem?: string | null;
-  autorId: number;
+  texto: string;
+  userId: number;
+  receitaId: number;
   isReported: boolean;
   reportCount: number;
-  likeCount?: number;
-  isLiked?: boolean;
-  isFavorited?: boolean;
   createdAt?: string;
   autor?: User | null;
-  categoria?: Categoria | null;
+  receita?: ReportedComentarioReceita;
   reports: ReportEntry[];
 }

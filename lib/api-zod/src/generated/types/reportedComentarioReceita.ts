@@ -6,6 +6,7 @@
  * OpenAPI spec version: 0.3.0
  */
 
-export interface MessageResponse {
-  message: string;
-}
+export type ReportedComentarioReceita = {
+  id?: number;
+  titulo?: string;
+} | null;

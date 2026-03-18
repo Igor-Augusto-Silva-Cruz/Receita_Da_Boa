@@ -3,10 +3,11 @@
  * Do not edit manually.
  * Api
  * Receita da Boa - Social Recipe Network API
- * OpenAPI spec version: 0.2.0
+ * OpenAPI spec version: 0.3.0
  */
 
 export interface ReportInput {
-  receitaId: number;
+  receitaId?: number | null;
+  comentarioId?: number | null;
   motivo: string;
 }

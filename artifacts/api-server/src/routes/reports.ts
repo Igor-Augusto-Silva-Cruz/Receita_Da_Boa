@@ -1,22 +1,33 @@
 import { Router } from "express";
-import { db, reportsTable, receitasTable } from "@workspace/db";
+import { db, reportsTable, receitasTable, commentsTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
 import { requireAuth } from "../middlewares/auth.js";
-import { ReportReceitaBody } from "@workspace/api-zod";
 
 const router = Router();
 
 router.post("/", requireAuth, async (req, res) => {
   try {
-    const { receitaId, motivo } = ReportReceitaBody.parse(req.body);
+    const receitaId = req.body?.receitaId ? parseInt(req.body.receitaId) : null;
+    const comentarioId = req.body?.comentarioId ? parseInt(req.body.comentarioId) : null;
+    const motivo = String(req.body?.motivo ?? "").trim();
+
+    if (!motivo) { res.status(400).json({ error: "Motivo é obrigatório" }); return; }
+    if (!receitaId && !comentarioId) { res.status(400).json({ error: "Informe receitaId ou comentarioId" }); return; }
+
     const userId = req.user!.userId;
 
-    await db.insert(reportsTable).values({ userId, receitaId, motivo });
-    await db.update(receitasTable).set({ isReported: true }).where(eq(receitasTable.id, receitaId));
+    await db.insert(reportsTable).values({ userId, receitaId, comentarioId, motivo });
 
-    res.status(201).json({ message: "Receita denunciada com sucesso" });
+    if (receitaId) {
+      await db.update(receitasTable).set({ isReported: true }).where(eq(receitasTable.id, receitaId));
+    }
+    if (comentarioId) {
+      await db.update(commentsTable).set({ isReported: true }).where(eq(commentsTable.id, comentarioId));
+    }
+
+    res.status(201).json({ message: "Denúncia registrada com sucesso" });
   } catch {
-    res.status(400).json({ error: "Erro ao denunciar receita" });
+    res.status(400).json({ error: "Erro ao registrar denúncia" });
   }
 });
 

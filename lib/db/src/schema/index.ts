@@ -1,4 +1,4 @@
-import { pgTable, serial, text, integer, pgEnum, uniqueIndex, boolean, timestamp, index } from "drizzle-orm/pg-core";
+import { pgTable, serial, text, integer, pgEnum, uniqueIndex, boolean, timestamp } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 
@@ -61,13 +61,15 @@ export const commentsTable = pgTable("comments", {
   userId: integer("user_id").notNull().references(() => usersTable.id),
   receitaId: integer("receita_id").notNull().references(() => receitasTable.id),
   texto: text("texto").notNull(),
+  isReported: boolean("is_reported").notNull().default(false),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
 export const reportsTable = pgTable("reports", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").notNull().references(() => usersTable.id),
-  receitaId: integer("receita_id").notNull().references(() => receitasTable.id),
+  receitaId: integer("receita_id").references(() => receitasTable.id),
+  comentarioId: integer("comentario_id").references(() => commentsTable.id),
   motivo: text("motivo").notNull(),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });

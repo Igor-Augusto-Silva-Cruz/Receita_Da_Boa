@@ -7,10 +7,12 @@
  */
 import type { User } from "./user";
 
-export interface ReportEntry {
+export interface Comentario {
   id: number;
-  motivo: string;
   userId: number;
+  receitaId: number;
+  texto: string;
+  isReported: boolean;
   createdAt: string;
-  denunciante?: User | null;
+  autor?: User | null;
 }

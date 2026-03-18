@@ -3,11 +3,13 @@
  * Do not edit manually.
  * Api
  * Receita da Boa - Social Recipe Network API
- * OpenAPI spec version: 0.2.0
+ * OpenAPI spec version: 0.3.0
  */
 
 export * from "./categoria";
+export * from "./comentario";
 export * from "./createCategoriaInput";
+export * from "./createComentarioInput";
 export * from "./createReceitaInput";
 export * from "./errorResponse";
 export * from "./favoritoInput";
@@ -18,6 +20,8 @@ export * from "./healthStatus";
 export * from "./likeResponse";
 export * from "./messageResponse";
 export * from "./receita";
+export * from "./reportedComentario";
+export * from "./reportedComentarioReceita";
 export * from "./reportedReceita";
 export * from "./reportEntry";
 export * from "./reportInput";

@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Api
-  version: 0.2.0
+  version: 0.3.0
   description: Receita da Boa - Social Recipe Network API
 servers:
   - url: /api
@@ -14,7 +14,7 @@ tags:
   - name: favoritos
   - name: likes
   - name: follows
-  - name: comments
+  - name: comentarios
   - name: reports
   - name: admin
   - name: usuarios
@@ -24,7 +24,6 @@ paths:
     get:
       operationId: healthCheck
       tags: [health]
-      summary: Health check
       responses:
         "200":
           description: Healthy
@@ -57,7 +56,6 @@ paths:
     get:
       operationId: getReceitas
       tags: [receitas]
-      summary: List recipes
       parameters:
         - name: feed
           in: query
@@ -88,7 +86,6 @@ paths:
     post:
       operationId: createReceita
       tags: [receitas]
-      summary: Create a recipe (any logged-in user)
       security:
         - bearerAuth: []
       requestBody:
@@ -104,18 +101,11 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Receita"
-        "401":
-          description: Not authenticated
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
 
   /receitas/{id}:
     get:
       operationId: getReceita
       tags: [receitas]
-      summary: Get recipe by ID
       parameters:
         - name: id
           in: path
@@ -138,7 +128,6 @@ paths:
     put:
       operationId: updateReceita
       tags: [receitas]
-      summary: Update own recipe
       security:
         - bearerAuth: []
       parameters:
@@ -160,16 +149,9 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Receita"
-        "403":
-          description: Forbidden
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
     delete:
       operationId: deleteReceita
       tags: [receitas]
-      summary: Delete own recipe
       security:
         - bearerAuth: []
       parameters:
@@ -185,12 +167,6 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/MessageResponse"
-        "403":
-          description: Forbidden
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
 
   /categorias:
     get:
@@ -218,7 +194,7 @@ paths:
               $ref: "#/components/schemas/CreateCategoriaInput"
       responses:
         "201":
-          description: Created category
+          description: Created
           content:
             application/json:
               schema:
@@ -282,7 +258,6 @@ paths:
     post:
       operationId: likeReceita
       tags: [likes]
-      summary: Like a recipe
       security:
         - bearerAuth: []
       parameters:
@@ -298,18 +273,11 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/LikeResponse"
-        "401":
-          description: Not authenticated
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
 
   /follows/{userId}:
     post:
       operationId: followUser
       tags: [follows]
-      summary: Follow or unfollow a user
       security:
         - bearerAuth: []
       parameters:
@@ -325,18 +293,79 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/FollowResponse"
-        "400":
-          description: Cannot follow yourself
+
+  /comentarios/{receitaId}:
+    get:
+      operationId: getComentarios
+      tags: [comentarios]
+      summary: Get comments for a recipe
+      parameters:
+        - name: receitaId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of comments
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponse"
+                type: array
+                items:
+                  $ref: "#/components/schemas/Comentario"
+    post:
+      operationId: createComentario
+      tags: [comentarios]
+      summary: Post a comment
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: receitaId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateComentarioInput"
+      responses:
+        "201":
+          description: Created comment
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Comentario"
+
+  /comentarios/{id}/delete:
+    post:
+      operationId: deleteComentario
+      tags: [comentarios]
+      summary: Delete own comment (or admin)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
 
   /reports:
     post:
-      operationId: reportReceita
+      operationId: reportContent
       tags: [reports]
-      summary: Report a recipe
+      summary: Report a recipe or a comment
       security:
         - bearerAuth: []
       requestBody:
@@ -357,30 +386,61 @@ paths:
     get:
       operationId: getAdminReports
       tags: [admin]
-      summary: Get all reported recipes with individual report details (ADM only)
+      summary: Get all reported recipes (ADM only)
       security:
         - bearerAuth: []
       responses:
         "200":
-          description: Reported recipes with report details
+          description: Reported recipes
           content:
             application/json:
               schema:
                 type: array
                 items:
                   $ref: "#/components/schemas/ReportedReceita"
-        "403":
-          description: Forbidden
+
+  /admin/reports/comentarios:
+    get:
+      operationId: getAdminComentarioReports
+      tags: [admin]
+      summary: Get all reported comments (ADM only)
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Reported comments
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponse"
+                type: array
+                items:
+                  $ref: "#/components/schemas/ReportedComentario"
 
   /admin/receitas/{id}:
     delete:
       operationId: adminDeleteReceita
       tags: [admin]
-      summary: Admin delete any recipe
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+
+  /admin/comentarios/{id}:
+    delete:
+      operationId: adminDeleteComentario
+      tags: [admin]
+      summary: Admin delete any comment
       security:
         - bearerAuth: []
       parameters:
@@ -401,7 +461,6 @@ paths:
     post:
       operationId: banUsuario
       tags: [admin]
-      summary: Ban a user (ADM only)
       security:
         - bearerAuth: []
       parameters:
@@ -422,7 +481,6 @@ paths:
     get:
       operationId: getUsuario
       tags: [usuarios]
-      summary: Get user profile
       parameters:
         - name: id
           in: path
@@ -582,6 +640,26 @@ components:
           type: string
       required: [id, titulo, descricao, ingredientes, instrucoes, autorId, isReported, likeCount, isLiked, isFavorited, createdAt]
 
+    Comentario:
+      type: object
+      properties:
+        id:
+          type: integer
+        userId:
+          type: integer
+        receitaId:
+          type: integer
+        texto:
+          type: string
+        isReported:
+          type: boolean
+        createdAt:
+          type: string
+        autor:
+          $ref: "#/components/schemas/User"
+          nullable: true
+      required: [id, userId, receitaId, texto, isReported, createdAt]
+
     ReportEntry:
       type: object
       properties:
@@ -640,6 +718,40 @@ components:
             $ref: "#/components/schemas/ReportEntry"
       required: [id, titulo, autorId, isReported, reportCount, reports]
 
+    ReportedComentario:
+      type: object
+      properties:
+        id:
+          type: integer
+        texto:
+          type: string
+        userId:
+          type: integer
+        receitaId:
+          type: integer
+        isReported:
+          type: boolean
+        reportCount:
+          type: integer
+        createdAt:
+          type: string
+        autor:
+          $ref: "#/components/schemas/User"
+          nullable: true
+        receita:
+          type: object
+          nullable: true
+          properties:
+            id:
+              type: integer
+            titulo:
+              type: string
+        reports:
+          type: array
+          items:
+            $ref: "#/components/schemas/ReportEntry"
+      required: [id, texto, userId, receitaId, isReported, reportCount, reports]
+
     CreateReceitaInput:
       type: object
       properties:
@@ -673,11 +785,22 @@ components:
           type: integer
       required: [receitaId]
 
+    CreateComentarioInput:
+      type: object
+      properties:
+        texto:
+          type: string
+      required: [texto]
+
     ReportInput:
       type: object
       properties:
         receitaId:
           type: integer
+          nullable: true
+        comentarioId:
+          type: integer
+          nullable: true
         motivo:
           type: string
-      required: [receitaId, motivo]
+      required: [motivo]

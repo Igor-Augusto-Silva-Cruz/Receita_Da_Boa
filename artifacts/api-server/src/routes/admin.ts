@@ -1,12 +1,20 @@
 import { Router } from "express";
-import { db, receitasTable, usersTable, reportsTable, favoritosTable, likesTable, categoriasTable } from "@workspace/db";
-import { eq, count, sql } from "drizzle-orm";
+import { db, receitasTable, usersTable, reportsTable, favoritosTable, likesTable, categoriasTable, commentsTable } from "@workspace/db";
+import { eq, count, isNull, isNotNull, sql } from "drizzle-orm";
 import { requireAuth, requireAdm } from "../middlewares/auth.js";
-import { AdminDeleteReceitaParams, BanUsuarioParams } from "@workspace/api-zod";
+import { z } from "zod/v4";
 
 const router = Router();
-
 router.use(requireAuth, requireAdm);
+
+const userFields = {
+  id: usersTable.id,
+  nome: usersTable.nome,
+  email: usersTable.email,
+  papel: usersTable.papel,
+  isBanned: usersTable.isBanned,
+  photoUrl: usersTable.photoUrl,
+};
 
 router.get("/reports", async (_req, res) => {
   try {
@@ -21,7 +29,7 @@ router.get("/reports", async (_req, res) => {
         autorId: receitasTable.autorId,
         isReported: receitasTable.isReported,
         createdAt: receitasTable.createdAt,
-        autor: { id: usersTable.id, nome: usersTable.nome, email: usersTable.email, papel: usersTable.papel, isBanned: usersTable.isBanned, photoUrl: usersTable.photoUrl },
+        autor: userFields,
         categoria: { id: categoriasTable.id, nome: categoriasTable.nome },
         likeCount: sql<number>`(SELECT COUNT(*) FROM likes WHERE likes.receita_id = ${receitasTable.id})`.mapWith(Number),
       })
@@ -38,26 +46,13 @@ router.get("/reports", async (_req, res) => {
             motivo: reportsTable.motivo,
             userId: reportsTable.userId,
             createdAt: reportsTable.createdAt,
-            denunciante: {
-              id: usersTable.id,
-              nome: usersTable.nome,
-              email: usersTable.email,
-              papel: usersTable.papel,
-              isBanned: usersTable.isBanned,
-              photoUrl: usersTable.photoUrl,
-            },
+            denunciante: userFields,
           })
           .from(reportsTable)
           .leftJoin(usersTable, eq(reportsTable.userId, usersTable.id))
           .where(eq(reportsTable.receitaId, r.id));
 
-        return {
-          ...r,
-          reportCount: reportRows.length,
-          isLiked: false,
-          isFavorited: false,
-          reports: reportRows,
-        };
+        return { ...r, reportCount: reportRows.length, isLiked: false, isFavorited: false, reports: reportRows };
       })
     );
 
@@ -67,12 +62,55 @@ router.get("/reports", async (_req, res) => {
   }
 });
 
+router.get("/reports/comentarios", async (_req, res) => {
+  try {
+    const reported = await db
+      .select({
+        id: commentsTable.id,
+        texto: commentsTable.texto,
+        userId: commentsTable.userId,
+        receitaId: commentsTable.receitaId,
+        isReported: commentsTable.isReported,
+        createdAt: commentsTable.createdAt,
+        autor: userFields,
+        receita: { id: receitasTable.id, titulo: receitasTable.titulo },
+      })
+      .from(commentsTable)
+      .leftJoin(usersTable, eq(commentsTable.userId, usersTable.id))
+      .leftJoin(receitasTable, eq(commentsTable.receitaId, receitasTable.id))
+      .where(eq(commentsTable.isReported, true));
+
+    const withReports = await Promise.all(
+      reported.map(async (r) => {
+        const reportRows = await db
+          .select({
+            id: reportsTable.id,
+            motivo: reportsTable.motivo,
+            userId: reportsTable.userId,
+            createdAt: reportsTable.createdAt,
+            denunciante: userFields,
+          })
+          .from(reportsTable)
+          .leftJoin(usersTable, eq(reportsTable.userId, usersTable.id))
+          .where(eq(reportsTable.comentarioId, r.id));
+
+        return { ...r, reportCount: reportRows.length, reports: reportRows };
+      })
+    );
+
+    res.json(withReports.sort((a, b) => b.reportCount - a.reportCount));
+  } catch {
+    res.status(500).json({ error: "Erro ao buscar denúncias de comentários" });
+  }
+});
+
 router.delete("/receitas/:id", async (req, res) => {
   try {
-    const { id } = AdminDeleteReceitaParams.parse(req.params);
+    const id = parseInt(req.params.id);
     await db.delete(favoritosTable).where(eq(favoritosTable.receitaId, id));
     await db.delete(likesTable).where(eq(likesTable.receitaId, id));
     await db.delete(reportsTable).where(eq(reportsTable.receitaId, id));
+    await db.delete(commentsTable).where(eq(commentsTable.receitaId, id));
     await db.delete(receitasTable).where(eq(receitasTable.id, id));
     res.json({ message: "Receita removida pelo administrador" });
   } catch {
@@ -80,9 +118,20 @@ router.delete("/receitas/:id", async (req, res) => {
   }
 });
 
+router.delete("/comentarios/:id", async (req, res) => {
+  try {
+    const id = parseInt(req.params.id);
+    await db.delete(reportsTable).where(eq(reportsTable.comentarioId, id));
+    await db.delete(commentsTable).where(eq(commentsTable.id, id));
+    res.json({ message: "Comentário removido pelo administrador" });
+  } catch {
+    res.status(500).json({ error: "Erro ao remover comentário" });
+  }
+});
+
 router.post("/usuarios/:id/ban", async (req, res) => {
   try {
-    const { id } = BanUsuarioParams.parse(req.params);
+    const id = parseInt(req.params.id);
     await db.update(usersTable).set({ isBanned: true }).where(eq(usersTable.id, id));
     res.json({ message: "Usuário banido com sucesso" });
   } catch {
