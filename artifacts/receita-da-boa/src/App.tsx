@@ -67,13 +67,14 @@ function App() {
     
     if (token) {
       localStorage.setItem('receita_token', token);
-      // Clean URL without reloading
-      window.history.replaceState({}, document.title, window.location.pathname);
-      queryClient.invalidateQueries();
-      // If this is a popup opened by another tab, notify opener and close
+      // If this was opened as a popup, notify the opener and close
       if (window.opener) {
         window.opener.postMessage({ type: 'AUTH_SUCCESS', token }, '*');
         window.close();
+      } else {
+        // Direct navigation (new tab flow): reload cleanly so React Query
+        // picks up the token from the very first render
+        window.location.replace(window.location.pathname);
       }
     }
 
