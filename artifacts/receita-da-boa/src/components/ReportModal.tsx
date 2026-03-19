@@ -2,7 +2,7 @@ import * as React from "react"
 import { Dialog } from "./ui/dialog"
 import { Textarea } from "./ui/input"
 import { Button } from "./ui/button"
-import { useReportReceita, getGetReceitasQueryKey } from "@workspace/api-client-react"
+import { useReportContent, getGetReceitasQueryKey } from "@workspace/api-client-react"
 import { useQueryClient } from "@tanstack/react-query"
 import { Flag } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
@@ -15,7 +15,7 @@ interface Props {
 
 export function ReportModal({ isOpen, onClose, receitaId }: Props) {
   const [motivo, setMotivo] = React.useState("")
-  const { mutate, isPending } = useReportReceita()
+  const { mutate, isPending } = useReportContent()
   const queryClient = useQueryClient()
   const { toast } = useToast()
 
