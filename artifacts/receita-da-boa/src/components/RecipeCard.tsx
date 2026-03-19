@@ -88,7 +88,7 @@ export function RecipeCard({ recipe, currentUser, onClick, onEdit, onDelete, onR
         
         <div className="absolute top-4 left-4 flex gap-2">
           {recipe.categoria && (
-            <span className="glass-panel px-3 py-1.5 rounded-xl text-xs font-bold text-foreground">
+            <span className="glass-panel px-3 py-1.5 rounded-xl text-xs font-bold text-[#ffffff] bg-[#df5d3a]">
               {recipe.categoria.nome}
             </span>
           )}
@@ -104,7 +104,6 @@ export function RecipeCard({ recipe, currentUser, onClick, onEdit, onDelete, onR
           </button>
         </div>
       </div>
-
       <div className="p-6 flex flex-col flex-1">
         <div className="flex justify-between items-start gap-4 mb-3">
           <h3 className="text-xl font-display font-bold text-foreground line-clamp-2 leading-tight">
@@ -163,5 +162,5 @@ export function RecipeCard({ recipe, currentUser, onClick, onEdit, onDelete, onR
         </div>
       </div>
     </motion.div>
-  )
+  );
 }
