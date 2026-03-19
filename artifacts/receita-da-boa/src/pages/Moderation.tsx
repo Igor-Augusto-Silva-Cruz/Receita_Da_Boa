@@ -145,7 +145,7 @@ export default function Moderation() {
                       <div className="flex items-center gap-2 flex-wrap">
                         <h3 className="font-bold text-foreground text-lg">{report.titulo}</h3>
                         {report.categoria && (
-                          <span className="text-xs bg-muted px-2 py-0.5 rounded-full text-muted-foreground">{report.categoria.nome}</span>
+                          <span className="text-xs bg-[#df5d3a] text-white px-2 py-1 rounded-full font-bold">{report.categoria.nome}</span>
                         )}
                       </div>
                       <Link href={`/usuario/${report.autorId}`} onClick={e => e.stopPropagation()} className="flex items-center gap-1.5 mt-1 text-sm text-muted-foreground hover:text-primary w-fit">

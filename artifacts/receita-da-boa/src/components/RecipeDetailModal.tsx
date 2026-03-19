@@ -205,7 +205,7 @@ export function RecipeDetailModal({ isOpen, onClose, recipe, currentUser, onRepo
             )}
             <div className="absolute top-4 left-4">
               {recipe.categoria && (
-                <span className="glass-panel px-3 py-1.5 rounded-full text-xs font-bold text-foreground">
+                <span className="px-3 py-1.5 rounded-full text-xs font-bold text-white bg-[#df5d3a]">
                   {recipe.categoria.nome}
                 </span>
               )}
