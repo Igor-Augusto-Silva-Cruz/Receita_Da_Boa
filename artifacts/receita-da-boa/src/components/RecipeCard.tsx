@@ -98,7 +98,7 @@ export function RecipeCard({ recipe, currentUser, onClick, onEdit, onDelete, onR
           <button 
             onClick={handleFavorite}
             className={`w-10 h-10 rounded-full flex items-center justify-center backdrop-blur-md transition-all shadow-sm
-              ${recipe.isFavorited ? 'bg-primary text-primary-foreground' : 'bg-white/80 dark:bg-black/50 text-foreground hover:bg-white dark:hover:bg-black'}`}
+              ${recipe.isFavorited ? 'bg-primary text-primary-foreground' : 'bg-primary/15 dark:bg-black/50 text-primary hover:bg-primary/25 dark:hover:bg-black'}`}
           >
             <Bookmark className="w-5 h-5" fill={recipe.isFavorited ? "currentColor" : "none"} />
           </button>

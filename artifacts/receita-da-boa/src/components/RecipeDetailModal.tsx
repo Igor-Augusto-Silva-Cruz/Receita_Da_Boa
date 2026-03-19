@@ -50,7 +50,7 @@ function ReportCommentInline({ comentarioId, onDone }: { comentarioId: number; o
         onChange={e => setMotivo(e.target.value)}
         placeholder="Descreva o problema..."
         rows={2}
-        className="w-full text-sm bg-white dark:bg-black/40 border border-border rounded-lg px-3 py-2 resize-none focus:outline-none focus:ring-2 focus:ring-orange-400"
+        className="w-full text-sm bg-accent/40 dark:bg-black/40 border border-border rounded-lg px-3 py-2 resize-none focus:outline-none focus:ring-2 focus:ring-orange-400"
       />
       <div className="flex gap-2 justify-end">
         <button onClick={onDone} className="text-xs text-muted-foreground hover:text-foreground px-2">Cancelar</button>
@@ -331,7 +331,7 @@ export function RecipeDetailModal({ isOpen, onClose, recipe, currentUser, onRepo
                     onKeyDown={handleKeyDown}
                     placeholder="Escreva um comentário... (Enter para enviar)"
                     rows={1}
-                    className="w-full bg-white dark:bg-black/40 border border-border rounded-2xl px-4 py-3 pr-12 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-primary/40 leading-relaxed"
+                    className="w-full bg-accent/40 dark:bg-black/40 border border-border rounded-2xl px-4 py-3 pr-12 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-primary/40 leading-relaxed"
                     style={{ minHeight: "44px", maxHeight: "120px" }}
                     onInput={e => {
                       const el = e.currentTarget

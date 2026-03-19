@@ -32,16 +32,16 @@
 }
 
 :root {
-  /* Warm Cream Background */
-  --background: 40 33% 98%;
-  --foreground: 30 12% 16%;
+  /* Soft Rose-Cream Background */
+  --background: 18 45% 97%;
+  --foreground: 18 20% 16%;
 
-  /* White Cards */
-  --card: 0 0% 100%;
-  --card-foreground: 30 12% 16%;
-  
-  --popover: 0 0% 100%;
-  --popover-foreground: 30 12% 16%;
+  /* Barely-Blush Cards */
+  --card: 20 60% 99%;
+  --card-foreground: 18 20% 16%;
+
+  --popover: 20 60% 99%;
+  --popover-foreground: 18 20% 16%;
 
   /* Terracotta Primary */
   --primary: 13 72% 55%;
@@ -51,34 +51,34 @@
   --secondary: 112 15% 42%;
   --secondary-foreground: 0 0% 100%;
 
-  /* Warm Peachy Muted */
-  --muted: 22 40% 93%;
-  --muted-foreground: 20 15% 42%;
+  /* Rose Pastel Muted — replaces all the gray */
+  --muted: 12 55% 93%;
+  --muted-foreground: 15 18% 44%;
 
   /* Warm Peach Accent */
-  --accent: 22 60% 91%;
+  --accent: 12 62% 92%;
   --accent-foreground: 13 72% 38%;
 
   --destructive: 0 84% 60%;
   --destructive-foreground: 0 0% 100%;
 
-  --border: 40 20% 88%;
-  --input: 40 20% 88%;
+  /* Soft Rose Border */
+  --border: 14 35% 88%;
+  --input: 14 35% 88%;
   --ring: 13 72% 55%;
 
   --radius: 1rem;
 }
 
 .dark {
-  /* Deep warm charcoal */
-  --background: 30 15% 12%;
-  --foreground: 40 33% 98%;
+  --background: 20 18% 11%;
+  --foreground: 20 30% 97%;
 
-  --card: 30 15% 15%;
-  --card-foreground: 40 33% 98%;
+  --card: 20 16% 14%;
+  --card-foreground: 20 30% 97%;
 
-  --popover: 30 15% 15%;
-  --popover-foreground: 40 33% 98%;
+  --popover: 20 16% 14%;
+  --popover-foreground: 20 30% 97%;
 
   --primary: 13 72% 60%;
   --primary-foreground: 0 0% 100%;
@@ -86,17 +86,17 @@
   --secondary: 112 15% 50%;
   --secondary-foreground: 0 0% 100%;
 
-  --muted: 22 18% 20%;
-  --muted-foreground: 25 14% 68%;
+  --muted: 15 22% 20%;
+  --muted-foreground: 15 16% 68%;
 
-  --accent: 30 20% 25%;
+  --accent: 15 25% 24%;
   --accent-foreground: 13 72% 70%;
 
   --destructive: 0 62% 30%;
-  --destructive-foreground: 40 33% 98%;
+  --destructive-foreground: 20 30% 97%;
 
-  --border: 30 10% 25%;
-  --input: 30 10% 25%;
+  --border: 15 15% 24%;
+  --input: 15 15% 24%;
   --ring: 13 72% 60%;
 }
 
@@ -121,21 +121,21 @@
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  @apply bg-muted-foreground/20 rounded-full border-2 border-solid border-transparent bg-clip-padding;
+  @apply bg-primary/20 rounded-full border-2 border-solid border-transparent bg-clip-padding;
 }
 ::-webkit-scrollbar-thumb:hover {
-  @apply bg-muted-foreground/40;
+  @apply bg-primary/35;
 }
 
 /* Utilities */
 .glass-panel {
-  @apply bg-white/80 dark:bg-black/40 backdrop-blur-md border border-white/20 dark:border-white/10;
+  @apply bg-white/75 dark:bg-black/40 backdrop-blur-md border border-white/30 dark:border-white/10;
 }
 
 .shadow-soft {
-  box-shadow: 0 4px 20px -2px rgba(45, 40, 35, 0.05), 0 0 3px rgba(45, 40, 35, 0.02);
+  box-shadow: 0 4px 20px -2px rgba(180, 80, 50, 0.06), 0 0 3px rgba(180, 80, 50, 0.03);
 }
 
 .shadow-card {
-  box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.02);
+  box-shadow: 0 10px 30px -5px rgba(180, 80, 50, 0.07), 0 4px 6px -2px rgba(180, 80, 50, 0.03);
 }

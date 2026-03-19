@@ -61,7 +61,7 @@ export function Sidebar({ user, categories, search, setSearch, activeFeed, setAc
             <Search className="absolute left-4 top-3.5 w-5 h-5 text-muted-foreground" />
             <Input 
               placeholder="Buscar receitas..." 
-              className="pl-12 bg-white/60 dark:bg-black/40 border-transparent shadow-inner"
+              className="pl-12 bg-accent/50 dark:bg-black/40 border-transparent shadow-inner"
               value={search}
               onChange={e => setSearch(e.target.value)}
             />
@@ -149,7 +149,7 @@ export function Sidebar({ user, categories, search, setSearch, activeFeed, setAc
               <Link href="/">
                 <button 
                   onClick={() => setCategoriaId(undefined)}
-                  className={cn("w-full text-left px-4 py-2.5 rounded-xl text-sm font-medium transition-all", !categoriaId && location === '/' ? "bg-white/80 dark:bg-black/40 text-primary shadow-sm ring-1 ring-border" : "text-foreground/70 hover:bg-muted")}
+                  className={cn("w-full text-left px-4 py-2.5 rounded-xl text-sm font-medium transition-all", !categoriaId && location === '/' ? "bg-primary/10 dark:bg-primary/20 text-primary shadow-sm" : "text-foreground/70 hover:bg-muted")}
                 >
                   Todas
                 </button>
@@ -158,7 +158,7 @@ export function Sidebar({ user, categories, search, setSearch, activeFeed, setAc
                 <Link href="/" key={cat.id}>
                   <button 
                     onClick={() => setCategoriaId(cat.id)}
-                    className={cn("w-full text-left px-4 py-2.5 rounded-xl text-sm font-medium transition-all", categoriaId === cat.id && location === '/' ? "bg-white/80 dark:bg-black/40 text-primary shadow-sm ring-1 ring-border" : "text-foreground/70 hover:bg-muted")}
+                    className={cn("w-full text-left px-4 py-2.5 rounded-xl text-sm font-medium transition-all", categoriaId === cat.id && location === '/' ? "bg-primary/10 dark:bg-primary/20 text-primary shadow-sm" : "text-foreground/70 hover:bg-muted")}
                   >
                     {cat.nome}
                   </button>
@@ -171,7 +171,7 @@ export function Sidebar({ user, categories, search, setSearch, activeFeed, setAc
         {/* User / Auth */}
         <div className="pt-6 border-t border-border/50 mt-auto">
           {user ? (
-            <div className="bg-white/80 dark:bg-black/40 rounded-2xl p-4 border border-border shadow-sm flex items-center justify-between">
+            <div className="bg-accent/70 dark:bg-black/40 rounded-2xl p-4 border border-border shadow-sm flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <UserAvatar nome={user.nome} photoUrl={user.photoUrl} size="sm" />
                 <div>
