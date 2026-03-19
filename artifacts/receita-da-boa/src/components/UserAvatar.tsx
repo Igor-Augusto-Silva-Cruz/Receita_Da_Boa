@@ -39,7 +39,7 @@ export function UserAvatar({ nome, photoUrl, size = "sm", className }: UserAvata
   return (
     <div
       className={cn(
-        "rounded-full bg-gradient-to-tr from-primary to-accent flex items-center justify-center text-primary-foreground font-bold flex-shrink-0 shadow-sm",
+        "rounded-full bg-gradient-to-tr from-primary to-orange-300 flex items-center justify-center text-white font-bold flex-shrink-0 shadow-sm",
         sizeClasses[size],
         className
       )}

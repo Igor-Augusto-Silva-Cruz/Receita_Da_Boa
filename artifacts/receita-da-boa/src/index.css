@@ -51,13 +51,13 @@
   --secondary: 112 15% 42%;
   --secondary-foreground: 0 0% 100%;
 
-  /* Warm Muted Gray/Beige */
-  --muted: 40 25% 92%;
-  --muted-foreground: 30 10% 40%;
+  /* Warm Peachy Muted */
+  --muted: 22 40% 93%;
+  --muted-foreground: 20 15% 42%;
 
-  /* Light Peach Accent */
-  --accent: 25 50% 92%;
-  --accent-foreground: 13 72% 40%;
+  /* Warm Peach Accent */
+  --accent: 22 60% 91%;
+  --accent-foreground: 13 72% 38%;
 
   --destructive: 0 84% 60%;
   --destructive-foreground: 0 0% 100%;
@@ -86,8 +86,8 @@
   --secondary: 112 15% 50%;
   --secondary-foreground: 0 0% 100%;
 
-  --muted: 30 10% 20%;
-  --muted-foreground: 40 10% 70%;
+  --muted: 22 18% 20%;
+  --muted-foreground: 25 14% 68%;
 
   --accent: 30 20% 25%;
   --accent-foreground: 13 72% 70%;

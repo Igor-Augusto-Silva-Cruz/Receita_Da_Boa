@@ -155,7 +155,7 @@ export function RecipeCard({ recipe, currentUser, onClick, onEdit, onDelete, onR
           <button 
             onClick={handleLike}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full transition-colors text-sm font-bold
-              ${recipe.isLiked ? 'bg-red-500/10 text-red-500' : 'bg-muted text-muted-foreground hover:bg-red-500/10 hover:text-red-500'}`}
+              ${recipe.isLiked ? 'bg-red-500/10 text-red-500' : 'bg-primary/10 text-primary/70 hover:bg-red-500/10 hover:text-red-500'}`}
           >
             <Heart className="w-4 h-4" fill={recipe.isLiked ? "currentColor" : "none"} />
             {recipe.likeCount}
