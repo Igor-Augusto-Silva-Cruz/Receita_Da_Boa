@@ -41,7 +41,7 @@ Funcionalidades Principais
 
  -------------------------------------
 
-  Diagrama de caso de uso
+  Demonstração visual das ações dos Usuários
  <img width="8192" height="2126" alt="image" src="https://github.com/user-attachments/assets/a7b62658-b3d4-445c-8133-c08889481eb3" />
 
 
