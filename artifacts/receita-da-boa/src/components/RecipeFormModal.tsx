@@ -4,8 +4,9 @@ import { Input, Textarea } from "./ui/input"
 import { Button } from "./ui/button"
 import { useCreateReceita, useUpdateReceita, getGetReceitasQueryKey, getGetReceitaQueryKey, useGetCategorias } from "@workspace/api-client-react"
 import { useQueryClient } from "@tanstack/react-query"
-import { UtensilsCrossed } from "lucide-react"
+import { UtensilsCrossed, ImagePlus, X, Loader2 } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
+import { useUpload } from "@workspace/object-storage-web"
 import type { Receita, CreateReceitaInput } from "@workspace/api-client-react/src/generated/api.schemas"
 
 interface Props {
@@ -23,12 +24,24 @@ export function RecipeFormModal({ isOpen, onClose, recipeToEdit }: Props) {
     urlImagem: "",
     categoriaId: null
   })
+  const [imagePreview, setImagePreview] = React.useState<string | null>(null)
 
   const { data: categories } = useGetCategorias()
   const { mutate: create, isPending: isCreating } = useCreateReceita()
   const { mutate: update, isPending: isUpdating } = useUpdateReceita()
   const queryClient = useQueryClient()
   const { toast } = useToast()
+
+  const { uploadFile, isUploading, progress } = useUpload({
+    basePath: "/api/storage",
+    onSuccess: (response) => {
+      const servingUrl = `/api/storage${response.objectPath}`
+      setFormData(prev => ({ ...prev, urlImagem: servingUrl }))
+    },
+    onError: () => {
+      toast({ title: "Erro ao enviar imagem", description: "Tente novamente.", variant: "destructive" })
+    }
+  })
 
   React.useEffect(() => {
     if (recipeToEdit) {
@@ -40,13 +53,29 @@ export function RecipeFormModal({ isOpen, onClose, recipeToEdit }: Props) {
         urlImagem: recipeToEdit.urlImagem || "",
         categoriaId: recipeToEdit.categoriaId
       })
+      setImagePreview(recipeToEdit.urlImagem || null)
     } else {
       setFormData({ titulo: "", descricao: "", ingredientes: "", instrucoes: "", urlImagem: "", categoriaId: null })
+      setImagePreview(null)
     }
   }, [recipeToEdit, isOpen])
 
+  const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    const localPreview = URL.createObjectURL(file)
+    setImagePreview(localPreview)
+    await uploadFile(file)
+  }
+
+  const handleRemoveImage = () => {
+    setImagePreview(null)
+    setFormData(prev => ({ ...prev, urlImagem: "" }))
+  }
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
+    if (isUploading) return
     const payload = { ...formData }
     if (!payload.urlImagem?.trim()) payload.urlImagem = null
 
@@ -116,9 +145,45 @@ export function RecipeFormModal({ isOpen, onClose, recipeToEdit }: Props) {
                   ))}
                 </select>
               </div>
+
               <div>
-                <label className="block text-sm font-bold mb-2 text-foreground/80">URL da Imagem</label>
-                <Input name="urlImagem" value={formData.urlImagem || ""} onChange={handleChange} placeholder="https://..." />
+                <label className="block text-sm font-bold mb-2 text-foreground/80">Foto da Receita</label>
+                {imagePreview ? (
+                  <div className="relative rounded-xl overflow-hidden border-2 border-border aspect-video">
+                    <img src={imagePreview} alt="Preview" className="w-full h-full object-cover" />
+                    {isUploading && (
+                      <div className="absolute inset-0 bg-black/50 flex flex-col items-center justify-center gap-2">
+                        <Loader2 className="w-6 h-6 text-white animate-spin" />
+                        <div className="w-3/4 h-1.5 bg-white/30 rounded-full overflow-hidden">
+                          <div className="h-full bg-white rounded-full transition-all duration-300" style={{ width: `${progress}%` }} />
+                        </div>
+                        <span className="text-white text-xs">{progress}%</span>
+                      </div>
+                    )}
+                    {!isUploading && (
+                      <button
+                        type="button"
+                        onClick={handleRemoveImage}
+                        className="absolute top-2 right-2 w-7 h-7 rounded-full bg-black/60 text-white flex items-center justify-center hover:bg-black/80 transition-colors"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    )}
+                  </div>
+                ) : (
+                  <label className="flex flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-border bg-muted/40 cursor-pointer aspect-video hover:border-primary/50 hover:bg-primary/5 transition-colors">
+                    <ImagePlus className="w-8 h-8 text-muted-foreground" />
+                    <span className="text-sm text-muted-foreground font-medium">Clique para escolher uma foto</span>
+                    <span className="text-xs text-muted-foreground">JPG, PNG ou WEBP</span>
+                    <input
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp"
+                      className="hidden"
+                      onChange={handleImageChange}
+                      disabled={isUploading}
+                    />
+                  </label>
+                )}
               </div>
             </div>
 
@@ -143,7 +208,7 @@ export function RecipeFormModal({ isOpen, onClose, recipeToEdit }: Props) {
 
           <div className="flex justify-end gap-3 pt-6 border-t border-border/50">
             <Button type="button" variant="ghost" onClick={onClose} size="lg">Cancelar</Button>
-            <Button type="submit" isLoading={isCreating || isUpdating} size="lg">
+            <Button type="submit" isLoading={isCreating || isUpdating} disabled={isUploading} size="lg">
               {recipeToEdit ? "Salvar Alterações" : "Publicar Receita"}
             </Button>
           </div>
