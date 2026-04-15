@@ -114,7 +114,11 @@ router.post("/", requireAuth, async (req, res) => {
         const response = await objectStorage.downloadObject(objectFile);
         const arrayBuffer = await response.arrayBuffer();
         const buffer = Buffer.from(arrayBuffer);
-        const mimeType = response.headers.get("content-type") ?? "image/jpeg";
+        // Limpa o mimeType removendo parâmetros extras (ex: "; charset=utf-8")
+        const rawMime = response.headers.get("content-type") ?? "image/jpeg";
+        const mimeType = rawMime.split(";")[0].trim() || "image/jpeg";
+
+        console.log(`[Moderação] Analisando imagem: mimeType="${mimeType}" bufferSize=${buffer.length}`);
 
         const impropria = await verificarImagemImpropria(buffer, mimeType);
         if (impropria) {

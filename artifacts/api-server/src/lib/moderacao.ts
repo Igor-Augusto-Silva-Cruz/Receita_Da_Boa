@@ -3,30 +3,38 @@ import { GoogleGenAI } from "@google/genai";
 const BASE_URL = process.env.AI_INTEGRATIONS_GEMINI_BASE_URL;
 const API_KEY  = process.env.AI_INTEGRATIONS_GEMINI_API_KEY;
 
-/**
- * Verifica se uma imagem contém conteúdo impróprio (pornografia, nudez ou violência)
- * usando gemini-3-flash-preview via proxy Replit AI Integrations.
- */
-export async function verificarImagemImpropria(
-  buffer: Buffer,
-  mimeType: string
-): Promise<boolean> {
-  if (!BASE_URL || !API_KEY) {
-    console.warn("Gemini não configurado — moderação ignorada.");
-    return false;
-  }
+let aiClient: InstanceType<typeof GoogleGenAI> | null = null;
 
-  try {
-    const ai = new GoogleGenAI({
+function getClient() {
+  if (!aiClient && BASE_URL && API_KEY) {
+    aiClient = new GoogleGenAI({
       apiKey: API_KEY,
       httpOptions: {
         apiVersion: "",
         baseUrl: BASE_URL,
       },
     });
+  }
+  return aiClient;
+}
 
-    const response = await ai.models.generateContent({
-      model: "gemini-3-flash-preview",
+/**
+ * Verifica se uma imagem contém conteúdo impróprio (pornografia, nudez ou violência)
+ * usando gemini-2.5-flash via proxy Replit AI Integrations.
+ */
+export async function verificarImagemImpropria(
+  buffer: Buffer,
+  mimeType: string
+): Promise<boolean> {
+  const ai = getClient();
+  if (!ai) {
+    console.warn("[Moderação] Gemini não configurado — moderação ignorada.");
+    return false;
+  }
+
+  try {
+    const result = await ai.models.generateContent({
+      model: "gemini-2.5-flash",
       contents: [
         {
           role: "user",
@@ -38,35 +46,47 @@ export async function verificarImagemImpropria(
               },
             },
             {
-              text: 'Analise esta imagem. Ela contém pornografia, nudez explícita, genitália, atos sexuais ou violência gráfica? Responda APENAS com "SIM" ou "NAO", sem mais texto.',
+              text: 'Esta imagem contém pornografia, nudez explícita, genitália, atos sexuais ou violência gráfica? Responda APENAS com "SIM" ou "NAO", sem mais texto.',
             },
           ],
         },
       ],
       config: {
         temperature: 0,
-        maxOutputTokens: 10,
+        maxOutputTokens: 50,
       },
     });
 
-    const candidate = response.candidates?.[0];
+    // Log completo para diagnóstico
+    console.log("[Moderação] resposta completa:", JSON.stringify(result).slice(0, 500));
 
-    // Se o Gemini bloqueou por segurança, a imagem é imprópria
-    if (!candidate || candidate.finishReason === "SAFETY") {
-      console.warn("Gemini bloqueou análise — imagem marcada como imprópria.");
+    const candidate = result.candidates?.[0];
+    const finishReason = candidate?.finishReason;
+
+    // Bloqueado por segurança = imagem imprópria
+    if (finishReason === "SAFETY" || finishReason === "PROHIBITED_CONTENT") {
+      console.warn("[Moderação] Bloqueado por segurança — imagem imprópria.");
       return true;
     }
 
-    const resposta = (candidate.content?.parts?.[0]?.text ?? "").trim().toUpperCase();
-    console.log(`Moderação Gemini: "${resposta}"`);
+    // Extrai texto de todos os parts
+    const parts = candidate?.content?.parts ?? [];
+    const resposta = parts
+      .map((p: any) => p.text ?? "")
+      .join("")
+      .trim()
+      .toUpperCase();
+
+    console.log(`[Moderação] finishReason=${finishReason} | resposta="${resposta}"`);
     return resposta.startsWith("SIM");
 
   } catch (err: any) {
-    if (err?.message?.includes("SAFETY") || err?.message?.includes("blocked")) {
-      console.warn("Gemini recusou a imagem por segurança — bloqueando.");
+    const msg = err?.message ?? String(err);
+    if (msg.includes("SAFETY") || msg.includes("blocked") || msg.includes("PROHIBITED")) {
+      console.warn("[Moderação] Gemini recusou — imagem imprópria.");
       return true;
     }
-    console.error("Erro na moderação de imagem via Gemini:", err?.message ?? err);
+    console.error("[Moderação] Erro técnico:", msg);
     return false;
   }
 }
