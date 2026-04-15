@@ -10,6 +10,8 @@ import {
   UpdateReceitaBody,
   DeleteReceitaParams,
 } from "@workspace/api-zod";
+import { verificarImagemImpropria } from "../lib/moderacao.js";
+import { ObjectStorageService } from "../lib/objectStorage.js";
 
 const router = Router();
 
@@ -94,6 +96,8 @@ router.get("/:id", optionalAuth, async (req, res) => {
   }
 });
 
+const objectStorage = new ObjectStorageService();
+
 router.post("/", requireAuth, async (req, res) => {
   try {
     const user = req.user!;
@@ -101,6 +105,28 @@ router.post("/", requireAuth, async (req, res) => {
     if (dbUser?.isBanned) { res.status(403).json({ error: "Usuário banido não pode criar receitas" }); return; }
 
     const body = CreateReceitaBody.parse(req.body);
+
+    // Moderação de imagem via Gemini (apenas para imagens do storage)
+    if (body.urlImagem && body.urlImagem.startsWith("/api/storage/objects/")) {
+      try {
+        const objectPath = body.urlImagem.replace("/api/storage", "");
+        const objectFile = await objectStorage.getObjectEntityFile(objectPath);
+        const response = await objectStorage.downloadObject(objectFile);
+        const arrayBuffer = await response.arrayBuffer();
+        const buffer = Buffer.from(arrayBuffer);
+        const mimeType = response.headers.get("content-type") ?? "image/jpeg";
+
+        const impropria = await verificarImagemImpropria(buffer, mimeType);
+        if (impropria) {
+          res.status(403).json({ error: "A imagem enviada contém conteúdo impróprio e não pode ser publicada." });
+          return;
+        }
+      } catch (err) {
+        console.error("Erro ao moderar imagem:", err);
+        // Falha na moderação não bloqueia a criação
+      }
+    }
+
     const [receita] = await db.insert(receitasTable).values({ ...body, autorId: user.userId }).returning();
     res.status(201).json({ ...receita, likeCount: 0, isLiked: false, isFavorited: false });
   } catch {
