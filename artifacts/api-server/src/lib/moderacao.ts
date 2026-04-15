@@ -1,12 +1,16 @@
-import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from "@google/generative-ai";
+/**
+ * Moderação de imagens via Gemini (proxy Replit AI Integrations).
+ * Usa fetch direto para suportar base URL customizada do proxy.
+ */
 
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
+const BASE_URL = process.env.AI_INTEGRATIONS_GEMINI_BASE_URL;
+const API_KEY  = process.env.AI_INTEGRATIONS_GEMINI_API_KEY;
 
 /**
  * Verifica se uma imagem contém conteúdo impróprio (pornografia, nudez ou violência)
- * usando o modelo Gemini 2.0 Flash.
+ * usando o modelo gemini-3-flash-preview via proxy Replit.
  *
- * @param buffer  Buffer com os bytes da imagem
+ * @param buffer    Buffer com os bytes da imagem
  * @param mimeType  Tipo MIME da imagem (ex: "image/jpeg")
  * @returns true se a imagem for imprópria, false caso contrário
  */
@@ -14,59 +18,74 @@ export async function verificarImagemImpropria(
   buffer: Buffer,
   mimeType: string
 ): Promise<boolean> {
-  if (!GEMINI_API_KEY) {
-    console.warn("GEMINI_API_KEY não configurada — moderação de imagem ignorada.");
+  if (!BASE_URL || !API_KEY) {
+    console.warn("AI_INTEGRATIONS_GEMINI_BASE_URL ou API_KEY não configurados — moderação ignorada.");
     return false;
   }
 
+  const endpoint = `${BASE_URL.replace(/\/$/, "")}/v1beta/models/gemini-3-flash-preview:generateContent`;
+
+  const body = {
+    contents: [
+      {
+        parts: [
+          {
+            inline_data: {
+              mime_type: mimeType,
+              data: buffer.toString("base64"),
+            },
+          },
+          {
+            text: 'Analise esta imagem. Ela contém pornografia, nudez explícita, genitália, atos sexuais ou violência gráfica? Responda APENAS com "SIM" ou "NAO", sem mais texto.',
+          },
+        ],
+      },
+    ],
+    safetySettings: [
+      { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold: "BLOCK_NONE" },
+      { category: "HARM_CATEGORY_HARASSMENT",         threshold: "BLOCK_NONE" },
+      { category: "HARM_CATEGORY_HATE_SPEECH",        threshold: "BLOCK_NONE" },
+      { category: "HARM_CATEGORY_DANGEROUS_CONTENT",  threshold: "BLOCK_NONE" },
+    ],
+    generationConfig: {
+      temperature: 0,
+      maxOutputTokens: 10,
+    },
+  };
+
   try {
-    const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
-    const model = genAI.getGenerativeModel({
-      model: "gemini-1.5-flash-latest",
-      safetySettings: [
-        { category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT, threshold: HarmBlockThreshold.BLOCK_NONE },
-        { category: HarmCategory.HARM_CATEGORY_HARASSMENT,         threshold: HarmBlockThreshold.BLOCK_NONE },
-        { category: HarmCategory.HARM_CATEGORY_HATE_SPEECH,        threshold: HarmBlockThreshold.BLOCK_NONE },
-        { category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT,  threshold: HarmBlockThreshold.BLOCK_NONE },
-      ],
+    const response = await fetch(endpoint, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${API_KEY}`,
+      },
+      body: JSON.stringify(body),
     });
 
-    const result = await model.generateContent([
-      {
-        inlineData: {
-          mimeType,
-          data: buffer.toString("base64"),
-        },
-      },
-      {
-        text: 'Analise esta imagem e responda APENAS com "SIM" se ela contiver pornografia, nudez explícita, genitália, atos sexuais ou violência gráfica. Responda APENAS com "NAO" se for uma imagem comum e apropriada. Não escreva mais nada além de SIM ou NAO.',
-      },
-    ]);
+    if (!response.ok) {
+      const errText = await response.text();
+      console.error(`Gemini moderação HTTP ${response.status}:`, errText);
+      // Se for erro de segurança (400), a imagem é imprópria
+      if (response.status === 400) return true;
+      return false;
+    }
 
-    const candidate = result.response.candidates?.[0];
+    const data = await response.json() as any;
 
-    // Se o Gemini bloqueou a resposta por segurança, a imagem é imprópria
+    // Se a resposta foi bloqueada por segurança, a imagem é imprópria
+    const candidate = data?.candidates?.[0];
     if (!candidate || candidate.finishReason === "SAFETY") {
-      console.warn("Gemini bloqueou a análise por segurança — imagem marcada como imprópria.");
+      console.warn("Gemini bloqueou análise por segurança — imagem marcada como imprópria.");
       return true;
     }
 
-    const resposta = candidate.content?.parts?.[0]?.text?.trim().toUpperCase() ?? "";
+    const resposta = (candidate?.content?.parts?.[0]?.text ?? "").trim().toUpperCase();
     console.log(`Moderação Gemini: "${resposta}"`);
     return resposta.startsWith("SIM");
 
-  } catch (err: any) {
-    // Se o Gemini se recusar a processar por segurança, bloqueia
-    if (
-      err?.message?.includes("SAFETY") ||
-      err?.message?.includes("blocked") ||
-      err?.status === 400
-    ) {
-      console.warn("Gemini recusou processar imagem por segurança — bloqueando.");
-      return true;
-    }
+  } catch (err) {
     console.error("Erro na moderação de imagem via Gemini:", err);
-    // Outros erros técnicos (rede, quota, etc.) não bloqueiam o upload
     return false;
   }
 }
