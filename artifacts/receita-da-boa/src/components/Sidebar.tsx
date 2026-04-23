@@ -5,6 +5,7 @@ import { ChefHat, Search, LayoutGrid, Heart, Flame, Users, ShieldAlert, Plus, Lo
 import { Button } from "./ui/button"
 import { Input } from "./ui/input"
 import { UserAvatar } from "./UserAvatar"
+import { NotificationBell } from "./NotificationBell"
 import { cn } from "@/lib/utils"
 
 interface Props {
@@ -171,17 +172,20 @@ export function Sidebar({ user, categories, search, setSearch, activeFeed, setAc
         {/* User / Auth */}
         <div className="pt-6 border-t border-border/50 mt-auto">
           {user ? (
-            <div className="bg-accent/70 dark:bg-black/40 rounded-2xl p-4 border border-border shadow-sm flex items-center justify-between">
-              <div className="flex items-center gap-3">
+            <div className="bg-accent/70 dark:bg-black/40 rounded-2xl p-3 border border-border shadow-sm flex items-center justify-between gap-2">
+              <div className="flex items-center gap-3 min-w-0 flex-1">
                 <UserAvatar nome={user.nome} photoUrl={user.photoUrl} size="sm" />
-                <div>
+                <div className="min-w-0">
                   <p className="font-bold text-sm text-foreground line-clamp-1">{user.nome}</p>
                   <p className="text-xs text-muted-foreground capitalize">{user.papel}</p>
                 </div>
               </div>
-              <button onClick={handleLogout} className="p-2 text-muted-foreground hover:bg-destructive/10 hover:text-destructive rounded-xl transition-colors">
-                <LogOut className="w-4 h-4" />
-              </button>
+              <div className="flex items-center gap-1 flex-shrink-0">
+                <NotificationBell />
+                <button onClick={handleLogout} className="p-2 text-muted-foreground hover:bg-destructive/10 hover:text-destructive rounded-xl transition-colors" aria-label="Sair">
+                  <LogOut className="w-4 h-4" />
+                </button>
+              </div>
             </div>
           ) : (
             <Button onClick={handleLogin} className="w-full" size="lg">

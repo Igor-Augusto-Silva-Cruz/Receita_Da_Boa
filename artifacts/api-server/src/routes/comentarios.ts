@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { db, commentsTable, usersTable } from "@workspace/db";
+import { db, commentsTable, usersTable, receitasTable, notificationsTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
 import { requireAuth, optionalAuth } from "../middlewares/auth.js";
 
@@ -59,6 +59,18 @@ router.post("/:receitaId", requireAuth, async (req, res) => {
       .insert(commentsTable)
       .values({ userId, receitaId, texto })
       .returning();
+
+    // Cria notificação para o autor da receita (se não for a própria pessoa)
+    const [receita] = await db.select({ autorId: receitasTable.autorId }).from(receitasTable).where(eq(receitasTable.id, receitaId)).limit(1);
+    if (receita && receita.autorId !== userId) {
+      await db.insert(notificationsTable).values({
+        userId: receita.autorId,
+        actorId: userId,
+        type: "comment",
+        receitaId,
+        comentarioId: comment.id,
+      });
+    }
 
     const [autor] = await db
       .select({ id: usersTable.id, nome: usersTable.nome, email: usersTable.email, papel: usersTable.papel, isBanned: usersTable.isBanned, photoUrl: usersTable.photoUrl })

@@ -74,6 +74,19 @@ export const reportsTable = pgTable("reports", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
+export const notificationTypeEnum = pgEnum("notification_type", ["like", "comment"]);
+
+export const notificationsTable = pgTable("notifications", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => usersTable.id),
+  actorId: integer("actor_id").notNull().references(() => usersTable.id),
+  type: notificationTypeEnum("type").notNull(),
+  receitaId: integer("receita_id").references(() => receitasTable.id, { onDelete: "cascade" }),
+  comentarioId: integer("comentario_id").references(() => commentsTable.id, { onDelete: "cascade" }),
+  isRead: boolean("is_read").notNull().default(false),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
 export const insertUserSchema = createInsertSchema(usersTable).omit({ id: true });
 export const insertCategoriaSchema = createInsertSchema(categoriasTable).omit({ id: true });
 export const insertReceitaSchema = createInsertSchema(receitasTable).omit({ id: true, createdAt: true });

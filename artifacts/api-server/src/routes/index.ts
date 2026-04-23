@@ -11,6 +11,7 @@ import comentariosRouter from "./comentarios.js";
 import reportsRouter from "./reports.js";
 import adminRouter from "./admin.js";
 import usuariosRouter from "./usuarios.js";
+import notificacoesRouter from "./notificacoes.js";
 
 const router: IRouter = Router();
 
@@ -26,5 +27,6 @@ router.use("/comentarios", comentariosRouter);
 router.use("/reports", reportsRouter);
 router.use("/admin", adminRouter);
 router.use("/usuarios", usuariosRouter);
+router.use("/notificacoes", notificacoesRouter);
 
 export default router;
