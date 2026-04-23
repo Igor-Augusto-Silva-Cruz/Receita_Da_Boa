@@ -89,7 +89,11 @@ export function NotificationBell() {
     if (n.type === "like" && n.actor?.id) {
       setLocation(`/usuario/${n.actor.id}`)
     } else if (n.type === "comment" && n.receitaId) {
-      setLocation(`/?receita=${n.receitaId}`)
+      setLocation("/")
+      // Pequeno delay para garantir que estamos no Home antes de disparar o evento
+      setTimeout(() => {
+        window.dispatchEvent(new CustomEvent("open-receita", { detail: n.receitaId }))
+      }, 50)
     }
   }
 

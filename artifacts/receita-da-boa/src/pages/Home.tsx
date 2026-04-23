@@ -43,17 +43,16 @@ export default function Home() {
     categoriaId
   })
 
-  // Abre receita automaticamente quando vier via ?receita=ID (ex: clique na notificação)
-  const [location, setLocation] = useLocation()
+  // Abre receita quando notificação de comentário é clicada (via evento global)
   const [pendingReceitaId, setPendingReceitaId] = React.useState<number | null>(null)
   React.useEffect(() => {
-    const params = new URLSearchParams(window.location.search)
-    const id = params.get("receita")
-    if (id) {
-      setPendingReceitaId(parseInt(id))
-      setLocation("/", { replace: true })
+    const handler = (e: Event) => {
+      const id = (e as CustomEvent<number>).detail
+      if (typeof id === "number") setPendingReceitaId(id)
     }
-  }, [location, setLocation])
+    window.addEventListener("open-receita", handler)
+    return () => window.removeEventListener("open-receita", handler)
+  }, [])
 
   const { data: pendingRecipe } = useGetReceita(pendingReceitaId ?? 0, {
     query: { enabled: pendingReceitaId !== null }
