@@ -1,5 +1,5 @@
 import * as React from "react"
-import { useGetUsuario, useFollowUser, useGetMe, useGetReceitas, getGetUsuarioQueryKey } from "@workspace/api-client-react"
+import { useGetUsuario, useFollowUser, useGetMe, useGetReceitas, useUpdateMe, getGetUsuarioQueryKey, getGetMeQueryKey } from "@workspace/api-client-react"
 import { Sidebar } from "@/components/Sidebar"
 import { RecipeCard } from "@/components/RecipeCard"
 import { RecipeDetailModal } from "@/components/RecipeDetailModal"
@@ -7,7 +7,8 @@ import { RecipeFormModal } from "@/components/RecipeFormModal"
 import { ReportModal } from "@/components/ReportModal"
 import { UserAvatar } from "@/components/UserAvatar"
 import { Button } from "@/components/ui/button"
-import { Users, ChefHat, UserPlus, UserMinus, Ban } from "lucide-react"
+import { Users, ChefHat, UserPlus, UserMinus, Ban, Pencil, Check, X } from "lucide-react"
+import { Textarea } from "@/components/ui/textarea"
 import { useRoute } from "wouter"
 import { useQueryClient } from "@tanstack/react-query"
 import { useToast } from "@/hooks/use-toast"
@@ -21,12 +22,34 @@ export default function Profile() {
   const { data: profile, isLoading } = useGetUsuario(userId)
   const { data: receitas, isLoading: receitasLoading } = useGetReceitas({ autorId: userId })
   const { mutate: follow, isPending } = useFollowUser()
+  const { mutate: updateMe, isPending: savingBio } = useUpdateMe()
   const queryClient = useQueryClient()
   const { toast } = useToast()
 
   const [selectedRecipe, setSelectedRecipe] = React.useState<Receita | null>(null)
   const [editingRecipe, setEditingRecipe] = React.useState<Receita | null>(null)
   const [reportRecipe, setReportRecipe] = React.useState<Receita | null>(null)
+  const [editingBio, setEditingBio] = React.useState(false)
+  const [bioDraft, setBioDraft] = React.useState("")
+
+  const isOwnProfile = !!currentUser && currentUser.id === userId
+
+  const startEditBio = () => {
+    setBioDraft(profile?.bio ?? "")
+    setEditingBio(true)
+  }
+
+  const saveBio = () => {
+    updateMe({ data: { bio: bioDraft.trim() || null } }, {
+      onSuccess: () => {
+        toast({ title: "Bio atualizada" })
+        queryClient.invalidateQueries({ queryKey: getGetUsuarioQueryKey(userId) })
+        queryClient.invalidateQueries({ queryKey: getGetMeQueryKey() })
+        setEditingBio(false)
+      },
+      onError: () => toast({ title: "Erro ao salvar bio", variant: "destructive" }),
+    })
+  }
 
   const handleFollow = () => {
     if (!currentUser) return toast({ title: "Login necessário" })
@@ -90,7 +113,55 @@ export default function Profile() {
                     <span className="text-xs font-bold uppercase tracking-wider bg-destructive/15 text-destructive px-2.5 py-1 rounded-full">Banido</span>
                   )}
                 </div>
-                <p className="text-muted-foreground mb-8">@{profile.nome.toLowerCase().replace(/\s+/g, '')}</p>
+                <p className="text-muted-foreground mb-6">@{profile.nome.toLowerCase().replace(/\s+/g, '')}</p>
+
+                {/* Bio */}
+                <div className="w-full max-w-xl mb-8">
+                  {editingBio ? (
+                    <div className="space-y-3">
+                      <Textarea
+                        value={bioDraft}
+                        onChange={e => setBioDraft(e.target.value.slice(0, 500))}
+                        placeholder="Conte um pouco sobre você, seus pratos favoritos, sua história na cozinha..."
+                        className="rounded-2xl resize-none min-h-[110px] bg-card"
+                        maxLength={500}
+                        autoFocus
+                      />
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="text-xs text-muted-foreground">{bioDraft.length}/500</span>
+                        <div className="flex gap-2">
+                          <Button size="sm" variant="ghost" onClick={() => setEditingBio(false)} disabled={savingBio}>
+                            <X className="w-4 h-4 mr-1" /> Cancelar
+                          </Button>
+                          <Button size="sm" onClick={saveBio} disabled={savingBio}>
+                            <Check className="w-4 h-4 mr-1" /> Salvar
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  ) : profile.bio ? (
+                    <div className="relative group">
+                      <p className="text-foreground/80 leading-relaxed whitespace-pre-wrap text-center px-2">
+                        {profile.bio}
+                      </p>
+                      {isOwnProfile && (
+                        <button
+                          onClick={startEditBio}
+                          className="mt-2 inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-primary transition-colors"
+                        >
+                          <Pencil className="w-3 h-3" /> Editar bio
+                        </button>
+                      )}
+                    </div>
+                  ) : isOwnProfile ? (
+                    <button
+                      onClick={startEditBio}
+                      className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-primary border border-dashed border-border hover:border-primary/40 rounded-full px-4 py-2 transition-colors"
+                    >
+                      <Pencil className="w-4 h-4" /> Adicionar uma bio
+                    </button>
+                  ) : null}
+                </div>
 
                 <div className="flex items-center gap-8 mb-10 text-foreground">
                   <div className="text-center">

@@ -14,6 +14,7 @@ export interface UserProfile {
   papel: UserProfilePapel;
   isBanned: boolean;
   photoUrl?: string | null;
+  bio?: string | null;
   followersCount: number;
   followingCount: number;
   receitasCount: number;

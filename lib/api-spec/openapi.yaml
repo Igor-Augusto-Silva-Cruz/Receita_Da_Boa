@@ -51,6 +51,28 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
+    patch:
+      operationId: updateMe
+      tags: [auth]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                bio:
+                  type: string
+                  nullable: true
+      responses:
+        "200":
+          description: Profile updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
 
   /receitas:
     get:
@@ -563,6 +585,9 @@ components:
         photoUrl:
           type: string
           nullable: true
+        bio:
+          type: string
+          nullable: true
       required: [id, nome, email, papel, isBanned]
 
     UserProfile:
@@ -580,6 +605,9 @@ components:
         isBanned:
           type: boolean
         photoUrl:
+          type: string
+          nullable: true
+        bio:
           type: string
           nullable: true
         followersCount:

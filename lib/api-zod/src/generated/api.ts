@@ -18,6 +18,15 @@ export const GetMeResponse = zod.object({
   papel: zod.enum(["usuario", "adm"]),
   isBanned: zod.boolean(),
   photoUrl: zod.string().nullish(),
+  bio: zod.string().nullish(),
+});
+
+export const UpdateMeBody = zod.object({
+  bio: zod.string().nullish(),
+});
+
+export const UpdateMeResponse = zod.object({
+  message: zod.string(),
 });
 
 export const GetReceitasQueryParams = zod.object({
@@ -54,6 +63,7 @@ export const GetReceitasResponseItem = zod.object({
       papel: zod.enum(["usuario", "adm"]),
       isBanned: zod.boolean(),
       photoUrl: zod.string().nullish(),
+      bio: zod.string().nullish(),
     })
     .nullish(),
   createdAt: zod.string(),
@@ -100,6 +110,7 @@ export const GetReceitaResponse = zod.object({
       papel: zod.enum(["usuario", "adm"]),
       isBanned: zod.boolean(),
       photoUrl: zod.string().nullish(),
+      bio: zod.string().nullish(),
     })
     .nullish(),
   createdAt: zod.string(),
@@ -145,6 +156,7 @@ export const UpdateReceitaResponse = zod.object({
       papel: zod.enum(["usuario", "adm"]),
       isBanned: zod.boolean(),
       photoUrl: zod.string().nullish(),
+      bio: zod.string().nullish(),
     })
     .nullish(),
   createdAt: zod.string(),
@@ -195,6 +207,7 @@ export const GetFavoritosResponseItem = zod.object({
       papel: zod.enum(["usuario", "adm"]),
       isBanned: zod.boolean(),
       photoUrl: zod.string().nullish(),
+      bio: zod.string().nullish(),
     })
     .nullish(),
   createdAt: zod.string(),
@@ -252,6 +265,7 @@ export const GetComentariosResponseItem = zod.object({
       papel: zod.enum(["usuario", "adm"]),
       isBanned: zod.boolean(),
       photoUrl: zod.string().nullish(),
+      bio: zod.string().nullish(),
     })
     .nullish(),
 });
@@ -313,6 +327,7 @@ export const GetAdminReportsResponseItem = zod.object({
       papel: zod.enum(["usuario", "adm"]),
       isBanned: zod.boolean(),
       photoUrl: zod.string().nullish(),
+      bio: zod.string().nullish(),
     })
     .nullish(),
   categoria: zod
@@ -335,6 +350,7 @@ export const GetAdminReportsResponseItem = zod.object({
           papel: zod.enum(["usuario", "adm"]),
           isBanned: zod.boolean(),
           photoUrl: zod.string().nullish(),
+          bio: zod.string().nullish(),
         })
         .nullish(),
     }),
@@ -361,6 +377,7 @@ export const GetAdminComentarioReportsResponseItem = zod.object({
       papel: zod.enum(["usuario", "adm"]),
       isBanned: zod.boolean(),
       photoUrl: zod.string().nullish(),
+      bio: zod.string().nullish(),
     })
     .nullish(),
   receita: zod
@@ -383,6 +400,7 @@ export const GetAdminComentarioReportsResponseItem = zod.object({
           papel: zod.enum(["usuario", "adm"]),
           isBanned: zod.boolean(),
           photoUrl: zod.string().nullish(),
+          bio: zod.string().nullish(),
         })
         .nullish(),
     }),
@@ -430,6 +448,7 @@ export const GetUsuarioResponse = zod.object({
   papel: zod.enum(["usuario", "adm"]),
   isBanned: zod.boolean(),
   photoUrl: zod.string().nullish(),
+  bio: zod.string().nullish(),
   followersCount: zod.number(),
   followingCount: zod.number(),
   receitasCount: zod.number(),

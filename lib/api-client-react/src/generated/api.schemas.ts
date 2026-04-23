@@ -40,6 +40,7 @@ export interface User {
   papel: UserPapel;
   isBanned: boolean;
   photoUrl?: string | null;
+  bio?: string | null;
 }
 
 export type UserProfilePapel =
@@ -57,6 +58,7 @@ export interface UserProfile {
   papel: UserProfilePapel;
   isBanned: boolean;
   photoUrl?: string | null;
+  bio?: string | null;
   followersCount: number;
   followingCount: number;
   receitasCount: number;
@@ -167,6 +169,10 @@ export interface ReportInput {
   comentarioId?: number | null;
   motivo: string;
 }
+
+export type UpdateMeBody = {
+  bio?: string | null;
+};
 
 export type GetReceitasParams = {
   feed?: GetReceitasFeed;

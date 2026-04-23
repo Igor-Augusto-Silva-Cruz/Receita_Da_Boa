@@ -84,10 +84,20 @@ router.get(
   }
 );
 
+router.patch("/me", requireAuth, async (req, res) => {
+  try {
+    const bio = typeof req.body?.bio === "string" ? req.body.bio.slice(0, 500) : null;
+    await db.update(usersTable).set({ bio }).where(eq(usersTable.id, req.user!.userId));
+    res.json({ message: "Perfil atualizado" });
+  } catch {
+    res.status(500).json({ error: "Erro ao atualizar perfil" });
+  }
+});
+
 router.get("/me", requireAuth, async (req, res) => {
   try {
     const [user] = await db
-      .select({ id: usersTable.id, nome: usersTable.nome, email: usersTable.email, papel: usersTable.papel, isBanned: usersTable.isBanned, photoUrl: usersTable.photoUrl })
+      .select({ id: usersTable.id, nome: usersTable.nome, email: usersTable.email, papel: usersTable.papel, isBanned: usersTable.isBanned, photoUrl: usersTable.photoUrl, bio: usersTable.bio })
       .from(usersTable)
       .where(eq(usersTable.id, req.user!.userId))
       .limit(1);
