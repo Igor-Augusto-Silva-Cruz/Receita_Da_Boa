@@ -7,7 +7,7 @@ import { RecipeFormModal } from "@/components/RecipeFormModal"
 import { ReportModal } from "@/components/ReportModal"
 import { UserAvatar } from "@/components/UserAvatar"
 import { Button } from "@/components/ui/button"
-import { Users, ChefHat, UserPlus, UserMinus } from "lucide-react"
+import { Users, ChefHat, UserPlus, UserMinus, Ban } from "lucide-react"
 import { useRoute } from "wouter"
 import { useQueryClient } from "@tanstack/react-query"
 import { useToast } from "@/hooks/use-toast"
@@ -33,6 +33,21 @@ export default function Profile() {
     follow({ userId }, {
       onSuccess: () => queryClient.invalidateQueries({ queryKey: getGetUsuarioQueryKey(userId) })
     })
+  }
+
+  const handleToggleBan = async () => {
+    if (!profile) return
+    const acao = profile.isBanned ? "desbanir" : "banir"
+    if (!confirm(`Tem certeza que deseja ${acao} ${profile.nome}?`)) return
+    try {
+      const endpoint = profile.isBanned ? "unban" : "ban"
+      const r = await fetch(`/api/admin/usuarios/${userId}/${endpoint}`, { method: "POST" })
+      if (!r.ok) throw new Error()
+      toast({ title: profile.isBanned ? "Usuário desbanido" : "Usuário banido", variant: profile.isBanned ? "default" : "destructive" })
+      queryClient.invalidateQueries({ queryKey: getGetUsuarioQueryKey(userId) })
+    } catch {
+      toast({ title: "Erro ao alterar status", variant: "destructive" })
+    }
   }
 
   const handleDelete = async (recipe: Receita) => {
@@ -69,7 +84,12 @@ export default function Profile() {
               <div className="relative z-10 flex flex-col items-center">
                 <UserAvatar nome={profile.nome} photoUrl={profile.photoUrl} size="xl" className="mb-6 border-4 border-card shadow-xl" />
                 
-                <h2 className="text-4xl font-display font-bold text-foreground mb-2">{profile.nome}</h2>
+                <div className="flex items-center gap-3 mb-2">
+                  <h2 className="text-4xl font-display font-bold text-foreground">{profile.nome}</h2>
+                  {profile.isBanned && (
+                    <span className="text-xs font-bold uppercase tracking-wider bg-destructive/15 text-destructive px-2.5 py-1 rounded-full">Banido</span>
+                  )}
+                </div>
                 <p className="text-muted-foreground mb-8">@{profile.nome.toLowerCase().replace(/\s+/g, '')}</p>
 
                 <div className="flex items-center gap-8 mb-10 text-foreground">
@@ -90,19 +110,31 @@ export default function Profile() {
                 </div>
 
                 {currentUser && currentUser.id !== profile.id && (
-                  <Button 
-                    size="lg" 
-                    variant={profile.isFollowing ? "outline" : "default"}
-                    onClick={handleFollow}
-                    disabled={isPending}
-                    className="w-48 rounded-full shadow-lg"
-                  >
-                    {profile.isFollowing ? (
-                      <><UserMinus className="w-5 h-5 mr-2" /> Deixar de Seguir</>
-                    ) : (
-                      <><UserPlus className="w-5 h-5 mr-2" /> Seguir Chef</>
+                  <div className="flex flex-col items-center gap-3">
+                    <Button 
+                      size="lg" 
+                      variant={profile.isFollowing ? "outline" : "default"}
+                      onClick={handleFollow}
+                      disabled={isPending}
+                      className="w-48 rounded-full shadow-lg"
+                    >
+                      {profile.isFollowing ? (
+                        <><UserMinus className="w-5 h-5 mr-2" /> Deixar de Seguir</>
+                      ) : (
+                        <><UserPlus className="w-5 h-5 mr-2" /> Seguir Chef</>
+                      )}
+                    </Button>
+                    {currentUser.papel === 'adm' && (
+                      <button
+                        onClick={handleToggleBan}
+                        className="text-xs text-muted-foreground/60 hover:text-destructive flex items-center gap-1.5 transition-colors"
+                        data-testid="button-toggle-ban"
+                      >
+                        <Ban className="w-3 h-3" />
+                        {profile.isBanned ? "Desbanir usuário" : "Banir usuário"}
+                      </button>
                     )}
-                  </Button>
+                  </div>
                 )}
               </div>
             </div>

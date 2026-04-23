@@ -139,4 +139,38 @@ router.post("/usuarios/:id/ban", async (req, res) => {
   }
 });
 
+router.post("/usuarios/:id/unban", async (req, res) => {
+  try {
+    const id = parseInt(req.params.id);
+    await db.update(usersTable).set({ isBanned: false }).where(eq(usersTable.id, id));
+    res.json({ message: "Usuário desbanido" });
+  } catch {
+    res.status(500).json({ error: "Erro ao desbanir usuário" });
+  }
+});
+
+// Ignora denúncias de uma receita (limpa reports + flag, mantém receita)
+router.post("/reports/receita/:id/ignore", async (req, res) => {
+  try {
+    const id = parseInt(req.params.id);
+    await db.delete(reportsTable).where(eq(reportsTable.receitaId, id));
+    await db.update(receitasTable).set({ isReported: false }).where(eq(receitasTable.id, id));
+    res.json({ message: "Denúncias ignoradas" });
+  } catch {
+    res.status(500).json({ error: "Erro ao ignorar denúncias" });
+  }
+});
+
+// Ignora denúncias de um comentário (limpa reports + flag, mantém comentário)
+router.post("/reports/comentario/:id/ignore", async (req, res) => {
+  try {
+    const id = parseInt(req.params.id);
+    await db.delete(reportsTable).where(eq(reportsTable.comentarioId, id));
+    await db.update(commentsTable).set({ isReported: false }).where(eq(commentsTable.id, id));
+    res.json({ message: "Denúncias ignoradas" });
+  } catch {
+    res.status(500).json({ error: "Erro ao ignorar denúncias" });
+  }
+});
+
 export default router;

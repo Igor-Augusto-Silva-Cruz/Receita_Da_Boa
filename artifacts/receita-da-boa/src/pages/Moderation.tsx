@@ -3,7 +3,7 @@ import { useGetAdminReports, useAdminDeleteReceita, useBanUsuario, useGetMe, get
 import { Sidebar } from "@/components/Sidebar"
 import { UserAvatar } from "@/components/UserAvatar"
 import { RecipeDetailModal } from "@/components/RecipeDetailModal"
-import { ShieldAlert, Trash2, Ban, ChevronDown, ChevronUp, MessageSquare, FileText, MessageCircle } from "lucide-react"
+import { ShieldAlert, Trash2, Ban, ChevronDown, ChevronUp, MessageSquare, FileText, MessageCircle, Check } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useToast } from "@/hooks/use-toast"
 import { useQueryClient } from "@tanstack/react-query"
@@ -60,6 +60,28 @@ export default function Moderation() {
           queryClient.invalidateQueries()
         }
       })
+    }
+  }
+
+  const handleIgnoreRecipe = async (id: number) => {
+    try {
+      const r = await fetch(`/api/admin/reports/receita/${id}/ignore`, { method: "POST" })
+      if (!r.ok) throw new Error()
+      toast({ title: "Denúncias ignoradas" })
+      queryClient.invalidateQueries({ queryKey: getGetAdminReportsQueryKey() })
+    } catch {
+      toast({ title: "Erro ao ignorar", variant: "destructive" })
+    }
+  }
+
+  const handleIgnoreComment = async (id: number) => {
+    try {
+      const r = await fetch(`/api/admin/reports/comentario/${id}/ignore`, { method: "POST" })
+      if (!r.ok) throw new Error()
+      toast({ title: "Denúncias ignoradas" })
+      queryClient.invalidateQueries({ queryKey: getGetAdminComentarioReportsQueryKey() })
+    } catch {
+      toast({ title: "Erro ao ignorar", variant: "destructive" })
     }
   }
 
@@ -160,6 +182,9 @@ export default function Moderation() {
                         <div className="text-xs text-muted-foreground mt-1">denúncias</div>
                       </div>
                       <div className="flex gap-2">
+                        <Button variant="outline" size="sm" onClick={e => { e.stopPropagation(); handleIgnoreRecipe(report.id); }} className="text-emerald-600 hover:bg-emerald-500/10 hover:border-emerald-500/30">
+                          <Check className="w-4 h-4 mr-1.5" /> Ignorar
+                        </Button>
                         <Button variant="outline" size="sm" onClick={e => { e.stopPropagation(); handleDeleteRecipe(report.id); }} className="text-destructive hover:bg-destructive/10 hover:border-destructive/30">
                           <Trash2 className="w-4 h-4 mr-1.5" /> Excluir
                         </Button>
@@ -226,6 +251,9 @@ export default function Moderation() {
                           <span className="flex items-center gap-1 text-xs text-orange-600 bg-orange-500/10 px-2 py-1 rounded-full">
                             <ShieldAlert className="w-3 h-3" /> {item.reportCount} {item.reportCount === 1 ? 'denúncia' : 'denúncias'}
                           </span>
+                          <Button variant="outline" size="sm" onClick={() => handleIgnoreComment(item.id)} className="text-emerald-600 hover:bg-emerald-500/10 hover:border-emerald-500/30 h-7 text-xs">
+                            <Check className="w-3 h-3 mr-1" /> Ignorar
+                          </Button>
                           <Button variant="outline" size="sm" onClick={() => handleDeleteComment(item.id)} className="text-destructive hover:bg-destructive/10 hover:border-destructive/30 h-7 text-xs">
                             <Trash2 className="w-3 h-3 mr-1" /> Excluir Comentário
                           </Button>
