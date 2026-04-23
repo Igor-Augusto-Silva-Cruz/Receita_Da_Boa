@@ -38,7 +38,6 @@ export function Sidebar({ user, categories, search, setSearch, activeFeed, setAc
   return (
     <aside className="w-80 flex-shrink-0 border-r border-border/60 bg-card/60 backdrop-blur-2xl relative hidden md:flex flex-col z-20">
       <div className="absolute inset-0 opacity-30 pointer-events-none mix-blend-multiply" style={{ backgroundImage: `url(${import.meta.env.BASE_URL}images/sidebar-bg.png)`, backgroundSize: 'cover' }} />
-      
       <div className="relative p-8 flex flex-col h-full z-10">
         <Link href="/" className="flex items-center gap-3 mb-10 hover:opacity-90 transition-opacity">
           <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-primary to-accent text-primary-foreground flex items-center justify-center shadow-lg shadow-primary/30">
@@ -172,7 +171,7 @@ export function Sidebar({ user, categories, search, setSearch, activeFeed, setAc
         {/* User / Auth */}
         <div className="pt-6 border-t border-border/50 mt-auto">
           {user ? (
-            <div className="bg-accent/70 dark:bg-black/40 rounded-2xl p-3 border border-border shadow-sm flex items-center justify-between gap-2">
+            <div className="dark:bg-black/40 rounded-2xl p-3 border border-border shadow-sm flex items-center justify-between gap-2 bg-[#f0874f]">
               <div className="flex items-center gap-3 min-w-0 flex-1">
                 <UserAvatar nome={user.nome} photoUrl={user.photoUrl} size="sm" />
                 <div className="min-w-0">
@@ -196,5 +195,5 @@ export function Sidebar({ user, categories, search, setSearch, activeFeed, setAc
         </div>
       </div>
     </aside>
-  )
+  );
 }
