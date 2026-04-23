@@ -1,4 +1,5 @@
 import * as React from "react"
+import { useLocation } from "wouter"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { Bell, Heart, MessageCircle } from "lucide-react"
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover"
@@ -37,12 +38,9 @@ function timeAgo(dateStr: string): string {
   return new Date(dateStr).toLocaleDateString("pt-BR")
 }
 
-interface Props {
-  onOpenRecipe?: (id: number) => void
-}
-
-export function NotificationBell({ onOpenRecipe }: Props) {
+export function NotificationBell() {
   const [open, setOpen] = React.useState(false)
+  const [, setLocation] = useLocation()
   const queryClient = useQueryClient()
 
   const { data: countData } = useQuery<{ count: number }>({
@@ -87,9 +85,11 @@ export function NotificationBell({ onOpenRecipe }: Props) {
 
   const handleClick = (n: NotificationItem) => {
     if (!n.isRead) markRead.mutate(n.id)
-    if (n.receitaId && onOpenRecipe) {
-      onOpenRecipe(n.receitaId)
-      setOpen(false)
+    setOpen(false)
+    if (n.type === "like" && n.actor?.id) {
+      setLocation(`/usuario/${n.actor.id}`)
+    } else if (n.type === "comment" && n.receitaId) {
+      setLocation(`/?receita=${n.receitaId}`)
     }
   }
 
