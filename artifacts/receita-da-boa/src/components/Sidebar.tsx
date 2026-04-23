@@ -176,7 +176,7 @@ export function Sidebar({ user, categories, search, setSearch, activeFeed, setAc
                 <UserAvatar nome={user.nome} photoUrl={user.photoUrl} size="sm" />
                 <div className="min-w-0">
                   <p className="font-bold text-sm text-foreground line-clamp-1">{user.nome}</p>
-                  <p className="text-xs text-muted-foreground capitalize">{user.papel}</p>
+                  <p className="text-xs capitalize text-[#3ba100]">{user.papel}</p>
                 </div>
               </div>
               <div className="flex items-center gap-1 flex-shrink-0">
