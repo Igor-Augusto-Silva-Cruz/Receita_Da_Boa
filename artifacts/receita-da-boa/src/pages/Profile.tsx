@@ -110,7 +110,7 @@ export default function Profile() {
   }
 
   return (
-    <div className="flex h-screen bg-background overflow-hidden font-sans">
+    <div className="flex flex-col md:flex-row h-screen bg-background overflow-hidden font-sans">
       <Sidebar 
         user={currentUser}
         search="" setSearch={() => {}}
@@ -125,9 +125,9 @@ export default function Profile() {
             <div className="h-48 bg-muted rounded-3xl" />
           </div>
         ) : profile ? (
-          <div className="max-w-5xl mx-auto p-6 md:p-10">
+          <div className="max-w-5xl mx-auto p-4 sm:p-6 md:p-10">
             {/* Profile card */}
-            <div className="bg-card rounded-[3rem] shadow-card border border-border/50 p-10 text-center relative overflow-hidden mb-10">
+            <div className="bg-card rounded-3xl md:rounded-[3rem] shadow-card border border-border/50 p-6 md:p-10 text-center relative overflow-hidden mb-8 md:mb-10">
               <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-accent/20 pointer-events-none" />
               
               <div className="relative z-10 flex flex-col items-center">
@@ -153,8 +153,8 @@ export default function Profile() {
                     </div>
                   </div>
                 ) : (
-                  <div className="flex items-center gap-3 mb-2 group">
-                    <h2 className="text-4xl font-display font-bold text-foreground">{profile.nome}</h2>
+                  <div className="flex items-center gap-2 md:gap-3 mb-2 group flex-wrap justify-center">
+                    <h2 className="text-3xl md:text-4xl font-display font-bold text-foreground break-words">{profile.nome}</h2>
                     {profile.isBanned && (
                       <span className="text-xs font-bold uppercase tracking-wider bg-destructive/15 text-destructive px-2.5 py-1 rounded-full">Banido</span>
                     )}
@@ -219,20 +219,20 @@ export default function Profile() {
                   ) : null}
                 </div>
 
-                <div className="flex items-center gap-8 mb-10 text-foreground">
+                <div className="flex items-center gap-4 sm:gap-6 md:gap-8 mb-8 md:mb-10 text-foreground flex-wrap justify-center">
                   <div className="text-center">
-                    <div className="text-3xl font-bold font-display">{profile.receitasCount}</div>
-                    <div className="text-sm text-muted-foreground flex items-center gap-1"><ChefHat className="w-4 h-4"/> Receitas</div>
+                    <div className="text-2xl md:text-3xl font-bold font-display">{profile.receitasCount}</div>
+                    <div className="text-xs md:text-sm text-muted-foreground flex items-center gap-1"><ChefHat className="w-4 h-4"/> Receitas</div>
                   </div>
                   <div className="w-px h-10 bg-border" />
                   <div className="text-center">
-                    <div className="text-3xl font-bold font-display">{profile.followersCount}</div>
-                    <div className="text-sm text-muted-foreground flex items-center gap-1"><Users className="w-4 h-4"/> Seguidores</div>
+                    <div className="text-2xl md:text-3xl font-bold font-display">{profile.followersCount}</div>
+                    <div className="text-xs md:text-sm text-muted-foreground flex items-center gap-1"><Users className="w-4 h-4"/> Seguidores</div>
                   </div>
                   <div className="w-px h-10 bg-border" />
                   <div className="text-center">
-                    <div className="text-3xl font-bold font-display">{profile.followingCount}</div>
-                    <div className="text-sm text-muted-foreground">Seguindo</div>
+                    <div className="text-2xl md:text-3xl font-bold font-display">{profile.followingCount}</div>
+                    <div className="text-xs md:text-sm text-muted-foreground">Seguindo</div>
                   </div>
                 </div>
 
@@ -267,16 +267,16 @@ export default function Profile() {
             </div>
 
             {/* Recipes grid */}
-            <h3 className="text-2xl font-display font-bold text-foreground mb-6">
+            <h3 className="text-xl md:text-2xl font-display font-bold text-foreground mb-4 md:mb-6 break-words">
               Receitas de {profile.nome.split(" ")[0]}
             </h3>
             
             {receitasLoading ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-6">
                 {[1,2,3].map(i => <div key={i} className="h-[420px] bg-muted rounded-[2rem] animate-pulse" />)}
               </div>
             ) : receitas && receitas.length > 0 ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-6">
                 {receitas.map(recipe => (
                   <RecipeCard
                     key={recipe.id}

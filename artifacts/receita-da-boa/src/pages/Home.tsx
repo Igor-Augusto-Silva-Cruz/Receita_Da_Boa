@@ -83,7 +83,7 @@ export default function Home() {
   }
 
   return (
-    <div className="flex h-screen bg-background overflow-hidden font-sans">
+    <div className="flex flex-col md:flex-row h-screen bg-background overflow-hidden font-sans">
       
       <Sidebar 
         user={user}
@@ -102,16 +102,16 @@ export default function Home() {
       />
 
       {/* MAIN CONTENT */}
-      <main className="flex-1 flex flex-col h-full relative bg-background overflow-hidden z-10">
+      <main className="flex-1 flex flex-col min-h-0 relative bg-background overflow-hidden z-10">
         <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage: `url(${import.meta.env.BASE_URL}images/hero-pattern.png)`, backgroundSize: '400px' }} />
         
-        <div className="flex-1 overflow-y-auto p-6 md:p-12 relative z-10">
+        <div className="flex-1 overflow-y-auto p-4 sm:p-6 md:p-12 relative z-10">
           <div className="max-w-7xl mx-auto">
-            <div className="mb-12">
-              <h2 className="text-4xl md:text-5xl font-display font-bold text-foreground tracking-tight">
+            <div className="mb-8 md:mb-12">
+              <h2 className="text-3xl md:text-5xl font-display font-bold text-foreground tracking-tight">
                 {search ? `Busca: ${search}` : getFeedTitle()}
               </h2>
-              <p className="text-muted-foreground mt-3 text-lg">
+              <p className="text-muted-foreground mt-2 md:mt-3 text-base md:text-lg">
                 {activeFeed === 'populares' ? 'As receitas mais amadas pela nossa comunidade.' : 
                  activeFeed === 'seguindo' ? 'Novidades dos chefs que você acompanha.' : 
                  'Descubra novos sabores todos os dias.'}
@@ -119,7 +119,7 @@ export default function Home() {
             </div>
 
             {isLoading ? (
-              <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-8">
+              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6 md:gap-8">
                 {[1,2,3,4,5,6].map(i => (
                   <div key={i} className="bg-card rounded-[2rem] h-[420px] border border-border/40 overflow-hidden">
                     <div className="h-[220px] bg-muted animate-pulse" />
@@ -144,7 +144,7 @@ export default function Home() {
                 </p>
               </div>
             ) : (
-              <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-8">
+              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6 md:gap-8">
                 {recipes?.map(recipe => (
                   <RecipeCard 
                     key={recipe.id} 

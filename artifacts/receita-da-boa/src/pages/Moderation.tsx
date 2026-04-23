@@ -93,7 +93,7 @@ export default function Moderation() {
   const comentarioCount = reportedComentarios?.length ?? 0
 
   return (
-    <div className="flex h-screen bg-background overflow-hidden font-sans">
+    <div className="flex flex-col md:flex-row h-screen bg-background overflow-hidden font-sans">
       <Sidebar
         user={user}
         search="" setSearch={() => {}}
@@ -102,15 +102,15 @@ export default function Moderation() {
         onNewRecipe={() => {}} onNewCategory={() => {}}
       />
 
-      <main className="flex-1 flex flex-col h-full overflow-y-auto bg-muted/20">
-        <div className="p-8 md:p-12 max-w-6xl mx-auto w-full">
-          <div className="flex items-center gap-4 mb-8">
-            <div className="w-16 h-16 rounded-2xl bg-destructive/10 text-destructive flex items-center justify-center">
-              <ShieldAlert className="w-8 h-8" />
+      <main className="flex-1 flex flex-col min-h-0 overflow-y-auto bg-muted/20">
+        <div className="p-4 sm:p-6 md:p-12 max-w-6xl mx-auto w-full">
+          <div className="flex items-center gap-3 md:gap-4 mb-6 md:mb-8">
+            <div className="w-12 h-12 md:w-16 md:h-16 rounded-2xl bg-destructive/10 text-destructive flex items-center justify-center flex-shrink-0">
+              <ShieldAlert className="w-6 h-6 md:w-8 md:h-8" />
             </div>
-            <div>
-              <h2 className="text-4xl font-display font-bold text-foreground">Painel de Moderação</h2>
-              <p className="text-muted-foreground mt-1 text-lg">Gerencie denúncias e usuários da comunidade.</p>
+            <div className="min-w-0">
+              <h2 className="text-2xl md:text-4xl font-display font-bold text-foreground">Painel de Moderação</h2>
+              <p className="text-muted-foreground mt-1 text-sm md:text-lg">Gerencie denúncias e usuários.</p>
             </div>
           </div>
 
@@ -152,10 +152,10 @@ export default function Moderation() {
               ) : reportedReceitas?.map(report => (
                 <div key={report.id} className="bg-card border border-border shadow-card rounded-3xl overflow-hidden">
                   <div
-                    className="flex items-center gap-4 p-6 cursor-pointer hover:bg-muted/30 transition-colors"
+                    className="flex flex-wrap md:flex-nowrap items-center gap-3 md:gap-4 p-4 md:p-6 cursor-pointer hover:bg-muted/30 transition-colors"
                     onClick={() => setPreviewRecipe(previewRecipe?.id === report.id ? null : report)}
                   >
-                    <div className="w-16 h-16 rounded-2xl overflow-hidden bg-muted flex-shrink-0">
+                    <div className="w-14 h-14 md:w-16 md:h-16 rounded-2xl overflow-hidden bg-muted flex-shrink-0">
                       {report.urlImagem ? (
                         <img src={report.urlImagem} alt={report.titulo} className="w-full h-full object-cover" />
                       ) : (
@@ -165,7 +165,7 @@ export default function Moderation() {
 
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <h3 className="font-bold text-foreground text-lg">{report.titulo}</h3>
+                        <h3 className="font-bold text-foreground text-base md:text-lg break-words">{report.titulo}</h3>
                         {report.categoria && (
                           <span className="text-xs bg-[#df5d3a] text-white px-2 py-1 rounded-full font-bold">{report.categoria.nome}</span>
                         )}
@@ -176,25 +176,25 @@ export default function Moderation() {
                       </Link>
                     </div>
 
-                    <div className="flex items-center gap-4 flex-shrink-0">
+                    <div className="flex items-center gap-2 md:gap-3 flex-shrink-0">
                       <div className="text-center">
-                        <div className="w-10 h-10 rounded-full bg-orange-500/10 text-orange-600 font-bold flex items-center justify-center text-sm">{report.reportCount}</div>
-                        <div className="text-xs text-muted-foreground mt-1">denúncias</div>
-                      </div>
-                      <div className="flex gap-2">
-                        <Button variant="outline" size="sm" onClick={e => { e.stopPropagation(); handleIgnoreRecipe(report.id); }} className="text-emerald-600 hover:bg-emerald-500/10 hover:border-emerald-500/30">
-                          <Check className="w-4 h-4 mr-1.5" /> Ignorar
-                        </Button>
-                        <Button variant="outline" size="sm" onClick={e => { e.stopPropagation(); handleDeleteRecipe(report.id); }} className="text-destructive hover:bg-destructive/10 hover:border-destructive/30">
-                          <Trash2 className="w-4 h-4 mr-1.5" /> Excluir
-                        </Button>
-                        <Button variant="outline" size="sm" onClick={e => { e.stopPropagation(); handleBan(report.autorId, report.autor?.nome || ''); }} className="text-destructive hover:bg-destructive/10 hover:border-destructive/30">
-                          <Ban className="w-4 h-4 mr-1.5" /> Banir
-                        </Button>
+                        <div className="w-9 h-9 md:w-10 md:h-10 rounded-full bg-orange-500/10 text-orange-600 font-bold flex items-center justify-center text-sm">{report.reportCount}</div>
                       </div>
                       <button onClick={e => { e.stopPropagation(); setExpandedId(expandedId === report.id ? null : report.id); }} className="p-2 rounded-full hover:bg-muted transition-colors text-muted-foreground">
                         {expandedId === report.id ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
                       </button>
+                    </div>
+
+                    <div className="flex gap-2 flex-wrap basis-full md:basis-auto md:ml-auto">
+                      <Button variant="outline" size="sm" onClick={e => { e.stopPropagation(); handleIgnoreRecipe(report.id); }} className="text-emerald-600 hover:bg-emerald-500/10 hover:border-emerald-500/30 flex-1 md:flex-none">
+                        <Check className="w-4 h-4 mr-1.5" /> Ignorar
+                      </Button>
+                      <Button variant="outline" size="sm" onClick={e => { e.stopPropagation(); handleDeleteRecipe(report.id); }} className="text-destructive hover:bg-destructive/10 hover:border-destructive/30 flex-1 md:flex-none">
+                        <Trash2 className="w-4 h-4 mr-1.5" /> Excluir
+                      </Button>
+                      <Button variant="outline" size="sm" onClick={e => { e.stopPropagation(); handleBan(report.autorId, report.autor?.nome || ''); }} className="text-destructive hover:bg-destructive/10 hover:border-destructive/30 flex-1 md:flex-none">
+                        <Ban className="w-4 h-4 mr-1.5" /> Banir
+                      </Button>
                     </div>
                   </div>
 
@@ -233,8 +233,8 @@ export default function Moderation() {
                 </div>
               ) : reportedComentarios?.map(item => (
                 <div key={item.id} className="bg-card border border-border shadow-card rounded-3xl overflow-hidden">
-                  <div className="p-6">
-                    <div className="flex items-start gap-4">
+                  <div className="p-4 md:p-6">
+                    <div className="flex items-start gap-3 md:gap-4">
                       <UserAvatar nome={item.autor?.nome} photoUrl={item.autor?.photoUrl} size="sm" className="flex-shrink-0 mt-1" />
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-2 flex-wrap">
