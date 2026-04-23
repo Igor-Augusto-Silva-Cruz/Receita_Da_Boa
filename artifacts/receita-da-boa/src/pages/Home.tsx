@@ -1,6 +1,6 @@
 import * as React from "react"
 import { useLocation } from "wouter"
-import { useGetReceitas, useGetCategorias, useGetMe, useDeleteReceita } from "@workspace/api-client-react"
+import { useGetReceitas, useGetCategorias, useGetMe, useDeleteReceita, useGetReceita } from "@workspace/api-client-react"
 import type { Receita } from "@workspace/api-client-react/src/generated/api.schemas"
 import { Sidebar } from "@/components/Sidebar"
 import { RecipeCard } from "@/components/RecipeCard"
@@ -45,17 +45,26 @@ export default function Home() {
 
   // Abre receita automaticamente quando vier via ?receita=ID (ex: clique na notificação)
   const [location, setLocation] = useLocation()
+  const [pendingReceitaId, setPendingReceitaId] = React.useState<number | null>(null)
   React.useEffect(() => {
     const params = new URLSearchParams(window.location.search)
     const id = params.get("receita")
-    if (id && recipes) {
-      const r = recipes.find(x => x.id === parseInt(id))
-      if (r) {
-        setSelectedRecipe(r)
-        setLocation("/", { replace: true })
-      }
+    if (id) {
+      setPendingReceitaId(parseInt(id))
+      setLocation("/", { replace: true })
     }
-  }, [location, recipes, setLocation])
+  }, [location, setLocation])
+
+  const { data: pendingRecipe } = useGetReceita(pendingReceitaId ?? 0, {
+    query: { enabled: pendingReceitaId !== null }
+  })
+
+  React.useEffect(() => {
+    if (pendingRecipe && pendingReceitaId) {
+      setSelectedRecipe(pendingRecipe)
+      setPendingReceitaId(null)
+    }
+  }, [pendingRecipe, pendingReceitaId])
 
   const handleDelete = (id: number) => {
     if(confirm("Tem certeza que deseja excluir esta receita?")) {
