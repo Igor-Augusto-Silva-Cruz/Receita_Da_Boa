@@ -172,6 +172,7 @@ export interface ReportInput {
 
 export type UpdateMeBody = {
   bio?: string | null;
+  nome?: string;
 };
 
 export type GetReceitasParams = {

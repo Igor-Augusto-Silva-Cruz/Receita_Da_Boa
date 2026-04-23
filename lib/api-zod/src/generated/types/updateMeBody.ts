@@ -8,4 +8,5 @@
 
 export type UpdateMeBody = {
   bio?: string | null;
+  nome?: string;
 };

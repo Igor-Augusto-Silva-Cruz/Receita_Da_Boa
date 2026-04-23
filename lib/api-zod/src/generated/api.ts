@@ -23,6 +23,7 @@ export const GetMeResponse = zod.object({
 
 export const UpdateMeBody = zod.object({
   bio: zod.string().nullish(),
+  nome: zod.string().optional(),
 });
 
 export const UpdateMeResponse = zod.object({

@@ -66,6 +66,8 @@ paths:
                 bio:
                   type: string
                   nullable: true
+                nome:
+                  type: string
       responses:
         "200":
           description: Profile updated

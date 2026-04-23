@@ -9,6 +9,7 @@ import { UserAvatar } from "@/components/UserAvatar"
 import { Button } from "@/components/ui/button"
 import { Users, ChefHat, UserPlus, UserMinus, Ban, Pencil, Check, X } from "lucide-react"
 import { Textarea } from "@/components/ui/textarea"
+import { Input } from "@/components/ui/input"
 import { useRoute } from "wouter"
 import { useQueryClient } from "@tanstack/react-query"
 import { useToast } from "@/hooks/use-toast"
@@ -31,12 +32,37 @@ export default function Profile() {
   const [reportRecipe, setReportRecipe] = React.useState<Receita | null>(null)
   const [editingBio, setEditingBio] = React.useState(false)
   const [bioDraft, setBioDraft] = React.useState("")
+  const [editingName, setEditingName] = React.useState(false)
+  const [nameDraft, setNameDraft] = React.useState("")
 
   const isOwnProfile = !!currentUser && currentUser.id === userId
 
   const startEditBio = () => {
     setBioDraft(profile?.bio ?? "")
     setEditingBio(true)
+  }
+
+  const startEditName = () => {
+    setNameDraft(profile?.nome ?? "")
+    setEditingName(true)
+  }
+
+  const saveName = () => {
+    const trimmed = nameDraft.trim()
+    if (trimmed.length < 2) {
+      toast({ title: "Nome muito curto", variant: "destructive" })
+      return
+    }
+    updateMe({ data: { nome: trimmed } }, {
+      onSuccess: () => {
+        toast({ title: "Nome atualizado" })
+        queryClient.invalidateQueries({ queryKey: getGetUsuarioQueryKey(userId) })
+        queryClient.invalidateQueries({ queryKey: getGetMeQueryKey() })
+        queryClient.invalidateQueries()
+        setEditingName(false)
+      },
+      onError: () => toast({ title: "Erro ao salvar nome", variant: "destructive" }),
+    })
   }
 
   const saveBio = () => {
@@ -107,12 +133,42 @@ export default function Profile() {
               <div className="relative z-10 flex flex-col items-center">
                 <UserAvatar nome={profile.nome} photoUrl={profile.photoUrl} size="xl" className="mb-6 border-4 border-card shadow-xl" />
                 
-                <div className="flex items-center gap-3 mb-2">
-                  <h2 className="text-4xl font-display font-bold text-foreground">{profile.nome}</h2>
-                  {profile.isBanned && (
-                    <span className="text-xs font-bold uppercase tracking-wider bg-destructive/15 text-destructive px-2.5 py-1 rounded-full">Banido</span>
-                  )}
-                </div>
+                {editingName ? (
+                  <div className="flex flex-col items-center gap-2 mb-2 w-full max-w-sm">
+                    <Input
+                      value={nameDraft}
+                      onChange={e => setNameDraft(e.target.value.slice(0, 60))}
+                      maxLength={60}
+                      autoFocus
+                      className="text-center text-2xl font-display font-bold rounded-2xl bg-card h-14"
+                      placeholder="Seu nome"
+                    />
+                    <div className="flex gap-2">
+                      <Button size="sm" variant="ghost" onClick={() => setEditingName(false)} disabled={savingBio}>
+                        <X className="w-4 h-4 mr-1" /> Cancelar
+                      </Button>
+                      <Button size="sm" onClick={saveName} disabled={savingBio}>
+                        <Check className="w-4 h-4 mr-1" /> Salvar
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-3 mb-2 group">
+                    <h2 className="text-4xl font-display font-bold text-foreground">{profile.nome}</h2>
+                    {profile.isBanned && (
+                      <span className="text-xs font-bold uppercase tracking-wider bg-destructive/15 text-destructive px-2.5 py-1 rounded-full">Banido</span>
+                    )}
+                    {isOwnProfile && (
+                      <button
+                        onClick={startEditName}
+                        className="opacity-0 group-hover:opacity-100 transition-opacity p-1.5 rounded-full hover:bg-muted text-muted-foreground hover:text-primary"
+                        title="Editar nome"
+                      >
+                        <Pencil className="w-4 h-4" />
+                      </button>
+                    )}
+                  </div>
+                )}
                 <p className="text-muted-foreground mb-6">@{profile.nome.toLowerCase().replace(/\s+/g, '')}</p>
 
                 {/* Bio */}

@@ -86,8 +86,23 @@ router.get(
 
 router.patch("/me", requireAuth, async (req, res) => {
   try {
-    const bio = typeof req.body?.bio === "string" ? req.body.bio.slice(0, 500) : null;
-    await db.update(usersTable).set({ bio }).where(eq(usersTable.id, req.user!.userId));
+    const updates: { bio?: string | null; nome?: string } = {};
+    if (req.body?.bio !== undefined) {
+      updates.bio = typeof req.body.bio === "string" ? req.body.bio.slice(0, 500) : null;
+    }
+    if (req.body?.nome !== undefined) {
+      const nome = typeof req.body.nome === "string" ? req.body.nome.trim().slice(0, 60) : "";
+      if (nome.length < 2) {
+        res.status(400).json({ error: "Nome deve ter pelo menos 2 caracteres" });
+        return;
+      }
+      updates.nome = nome;
+    }
+    if (Object.keys(updates).length === 0) {
+      res.status(400).json({ error: "Nenhum campo para atualizar" });
+      return;
+    }
+    await db.update(usersTable).set(updates).where(eq(usersTable.id, req.user!.userId));
     res.json({ message: "Perfil atualizado" });
   } catch {
     res.status(500).json({ error: "Erro ao atualizar perfil" });
