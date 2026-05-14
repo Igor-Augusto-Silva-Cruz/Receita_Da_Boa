@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { db, receitasTable, categoriasTable, usersTable, favoritosTable, likesTable, followsTable, reportsTable } from "@workspace/db";
+import { db, receitasTable, categoriasTable, usersTable, favoritosTable, likesTable, followsTable, reportsTable, commentsTable } from "@workspace/db";
 import { eq, ilike, and, inArray, desc, count, sql } from "drizzle-orm";
 import { requireAuth, optionalAuth } from "../middlewares/auth.js";
 import {
@@ -142,6 +142,7 @@ router.delete("/:id", requireAuth, async (req, res) => {
     await db.delete(favoritosTable).where(eq(favoritosTable.receitaId, id));
     await db.delete(likesTable).where(eq(likesTable.receitaId, id));
     await db.delete(reportsTable).where(eq(reportsTable.receitaId, id));
+    await db.delete(commentsTable).where(eq(commentsTable.receitaId, id));
     await db.delete(receitasTable).where(eq(receitasTable.id, id));
     res.json({ message: "Receita removida" });
   } catch {
