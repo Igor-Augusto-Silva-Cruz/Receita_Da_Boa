@@ -1,5 +1,5 @@
 import * as React from "react"
-import { useGetUsuario, useFollowUser, useGetMe, useGetReceitas, useUpdateMe, getGetUsuarioQueryKey, getGetMeQueryKey } from "@workspace/api-client-react"
+import { useGetUsuario, useFollowUser, useGetMe, useGetReceitas, useGetFavoritos, useUpdateMe, getGetUsuarioQueryKey, getGetMeQueryKey } from "@workspace/api-client-react"
 import { Sidebar } from "@/components/Sidebar"
 import { RecipeCard } from "@/components/RecipeCard"
 import { RecipeDetailModal } from "@/components/RecipeDetailModal"
@@ -7,7 +7,7 @@ import { RecipeFormModal } from "@/components/RecipeFormModal"
 import { ReportModal } from "@/components/ReportModal"
 import { UserAvatar } from "@/components/UserAvatar"
 import { Button } from "@/components/ui/button"
-import { Users, ChefHat, UserPlus, UserMinus, Ban, Pencil, Check, X } from "lucide-react"
+import { Users, ChefHat, UserPlus, UserMinus, Ban, Pencil, Check, X, Bookmark } from "lucide-react"
 import { Textarea } from "@/components/ui/textarea"
 import { Input } from "@/components/ui/input"
 import { useRoute } from "wouter"
@@ -27,6 +27,13 @@ export default function Profile() {
   const queryClient = useQueryClient()
   const { toast } = useToast()
 
+  const isOwnProfile = !!currentUser && currentUser.id === userId
+
+  const [activeTab, setActiveTab] = React.useState<'receitas' | 'salvos'>('receitas')
+  const { data: favoritos, isLoading: favoritosLoading } = useGetFavoritos({
+    query: { enabled: isOwnProfile }
+  })
+
   const [selectedRecipe, setSelectedRecipe] = React.useState<Receita | null>(null)
   const [editingRecipe, setEditingRecipe] = React.useState<Receita | null>(null)
   const [reportRecipe, setReportRecipe] = React.useState<Receita | null>(null)
@@ -34,8 +41,6 @@ export default function Profile() {
   const [bioDraft, setBioDraft] = React.useState("")
   const [editingName, setEditingName] = React.useState(false)
   const [nameDraft, setNameDraft] = React.useState("")
-
-  const isOwnProfile = !!currentUser && currentUser.id === userId
 
   const startEditBio = () => {
     setBioDraft(profile?.bio ?? "")
@@ -266,34 +271,77 @@ export default function Profile() {
               </div>
             </div>
 
-            {/* Recipes grid */}
-            <h3 className="text-xl md:text-2xl font-display font-bold text-foreground mb-4 md:mb-6 break-words">
-              Receitas de {profile.nome.split(" ")[0]}
-            </h3>
-            
-            {receitasLoading ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-6">
-                {[1,2,3].map(i => <div key={i} className="h-[420px] bg-muted rounded-[2rem] animate-pulse" />)}
-              </div>
-            ) : receitas && receitas.length > 0 ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-6">
-                {receitas.map(recipe => (
-                  <RecipeCard
-                    key={recipe.id}
-                    recipe={recipe}
-                    currentUser={currentUser}
-                    onClick={() => setSelectedRecipe(recipe)}
-                    onEdit={() => setEditingRecipe(recipe)}
-                    onDelete={() => handleDelete(recipe)}
-                    onReport={() => setReportRecipe(recipe)}
-                  />
-                ))}
-              </div>
+            {/* Tabs */}
+            <div className="flex gap-2 mb-6 p-1 bg-muted rounded-2xl w-fit">
+              <button
+                onClick={() => setActiveTab('receitas')}
+                className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-all ${activeTab === 'receitas' ? 'bg-card shadow text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
+              >
+                <ChefHat className="w-4 h-4" />
+                Receitas
+              </button>
+              {isOwnProfile && (
+                <button
+                  onClick={() => setActiveTab('salvos')}
+                  className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-all ${activeTab === 'salvos' ? 'bg-card shadow text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
+                >
+                  <Bookmark className="w-4 h-4" />
+                  Salvos
+                </button>
+              )}
+            </div>
+
+            {activeTab === 'receitas' ? (
+              receitasLoading ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-6">
+                  {[1,2,3].map(i => <div key={i} className="h-[420px] bg-muted rounded-[2rem] animate-pulse" />)}
+                </div>
+              ) : receitas && receitas.length > 0 ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-6">
+                  {receitas.map(recipe => (
+                    <RecipeCard
+                      key={recipe.id}
+                      recipe={recipe}
+                      currentUser={currentUser}
+                      onClick={() => setSelectedRecipe(recipe)}
+                      onEdit={() => setEditingRecipe(recipe)}
+                      onDelete={() => handleDelete(recipe)}
+                      onReport={() => setReportRecipe(recipe)}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-16 text-muted-foreground">
+                  <ChefHat className="w-12 h-12 mx-auto mb-4 opacity-30" />
+                  <p className="text-lg font-medium">Nenhuma receita ainda.</p>
+                </div>
+              )
             ) : (
-              <div className="text-center py-16 text-muted-foreground">
-                <ChefHat className="w-12 h-12 mx-auto mb-4 opacity-30" />
-                <p className="text-lg font-medium">Nenhuma receita ainda.</p>
-              </div>
+              favoritosLoading ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-6">
+                  {[1,2,3].map(i => <div key={i} className="h-[420px] bg-muted rounded-[2rem] animate-pulse" />)}
+                </div>
+              ) : favoritos && favoritos.length > 0 ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-6">
+                  {favoritos.map(recipe => (
+                    <RecipeCard
+                      key={recipe.id}
+                      recipe={recipe}
+                      currentUser={currentUser}
+                      onClick={() => setSelectedRecipe(recipe)}
+                      onEdit={() => setEditingRecipe(recipe)}
+                      onDelete={() => handleDelete(recipe)}
+                      onReport={() => setReportRecipe(recipe)}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-16 text-muted-foreground">
+                  <Bookmark className="w-12 h-12 mx-auto mb-4 opacity-30" />
+                  <p className="text-lg font-medium">Nenhuma receita salva ainda.</p>
+                  <p className="text-sm mt-1">Clique no ícone de marcador nas receitas para salvá-las aqui.</p>
+                </div>
+              )
             )}
           </div>
         ) : (
