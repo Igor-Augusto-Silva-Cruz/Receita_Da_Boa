@@ -195,10 +195,10 @@ export function RecipeDetailModal({ isOpen, onClose, recipe: recipeProp, current
   const promptLogin = () => toast({ title: "Login necessário" })
 
   return (
-    <Dialog isOpen={isOpen} onClose={onClose} className="max-w-5xl p-0 overflow-hidden bg-background">
-      <div className="flex flex-col md:flex-row h-full max-h-[90vh]">
+    <Dialog isOpen={isOpen} onClose={onClose} className="max-w-5xl p-0 bg-background">
+      <div className="flex flex-col md:flex-row md:h-[88vh] md:overflow-hidden">
         {/* Left Side: Image + info */}
-        <div className="md:w-2/5 flex flex-col shrink-0 overflow-y-auto">
+        <div className="md:w-2/5 flex flex-col shrink-0 md:overflow-y-auto">
           <div className="relative h-64 md:h-72 bg-muted shrink-0">
             {recipe.urlImagem ? (
               <img src={recipe.urlImagem} alt={recipe.titulo} className="w-full h-full object-cover" />
@@ -285,7 +285,7 @@ export function RecipeDetailModal({ isOpen, onClose, recipe: recipeProp, current
         </div>
 
         {/* Right Side: Comments */}
-        <div className="flex-1 flex flex-col border-t md:border-t-0 md:border-l border-border min-h-0">
+        <div className="flex-1 flex flex-col border-t md:border-t-0 md:border-l border-border md:min-h-0 md:overflow-hidden">
           <div className="px-6 py-4 border-b border-border flex items-center gap-2">
             <MessageCircle className="w-5 h-5 text-muted-foreground" />
             <h3 className="font-display font-bold text-foreground">
@@ -297,7 +297,7 @@ export function RecipeDetailModal({ isOpen, onClose, recipe: recipeProp, current
           </div>
 
           {/* Comments list */}
-          <div className="flex-1 overflow-y-auto p-6 space-y-5">
+          <div className="md:flex-1 md:overflow-y-auto p-6 space-y-5">
             {comentariosLoading ? (
               <div className="space-y-4">
                 {[1,2,3].map(i => (
