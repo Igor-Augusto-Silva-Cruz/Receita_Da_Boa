@@ -72,9 +72,11 @@ function App() {
         window.opener.postMessage({ type: 'AUTH_SUCCESS', token }, '*');
         window.close();
       } else {
-        // Direct navigation (new tab flow): reload cleanly so React Query
-        // picks up the token from the very first render
-        window.location.replace(window.location.pathname);
+        // Clean the ?token=... from the URL without navigating (avoids mobile
+        // browsers treating same-path replace as a no-op and keeping 401 cache)
+        window.history.replaceState({}, '', window.location.pathname);
+        // Invalidate all queries so useGetMe and others re-fetch with the new token
+        queryClient.invalidateQueries();
       }
     }
 
