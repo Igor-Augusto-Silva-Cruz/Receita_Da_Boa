@@ -221,7 +221,7 @@ export function RecipeDetailModal({ isOpen, onClose, recipe, currentUser, onRepo
                   {recipe.autor?.nome}
                 </Link>
                 <span>•</span>
-                <span>{formatDistanceToNow(new Date(recipe.createdAt), { addSuffix: true, locale: ptBR })}</span>
+                <span>{recipe.createdAt && !isNaN(new Date(recipe.createdAt).getTime()) ? formatDistanceToNow(new Date(recipe.createdAt), { addSuffix: true, locale: ptBR }) : ''}</span>
               </div>
 
               <div className="flex items-center gap-2">
