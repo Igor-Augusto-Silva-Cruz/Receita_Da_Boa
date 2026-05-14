@@ -9,7 +9,7 @@ import { useQueryClient } from "@tanstack/react-query"
 import { useToast } from "@/hooks/use-toast"
 import { formatDistanceToNow } from "date-fns"
 import { ptBR } from "date-fns/locale"
-import { useLikeReceita, useAddFavorito, useRemoveFavorito, getGetReceitasQueryKey, getGetReceitaQueryKey, useGetComentarios, getGetComentariosQueryKey } from "@workspace/api-client-react"
+import { useLikeReceita, useAddFavorito, useRemoveFavorito, useGetReceita, getGetReceitasQueryKey, getGetReceitaQueryKey, getGetFavoritosQueryKey, useGetComentarios, getGetComentariosQueryKey } from "@workspace/api-client-react"
 
 interface Props {
   isOpen: boolean
@@ -116,7 +116,7 @@ function CommentItem({ comment, currentUser, receitaId }: { comment: Comentario;
   )
 }
 
-export function RecipeDetailModal({ isOpen, onClose, recipe, currentUser, onReport }: Props) {
+export function RecipeDetailModal({ isOpen, onClose, recipe: recipeProp, currentUser, onReport }: Props) {
   const queryClient = useQueryClient()
   const { toast } = useToast()
   const [newComment, setNewComment] = React.useState("")
@@ -127,6 +127,12 @@ export function RecipeDetailModal({ isOpen, onClose, recipe, currentUser, onRepo
   const { mutate: addFav } = useAddFavorito()
   const { mutate: remFav } = useRemoveFavorito()
 
+  // Fetch fresh data so like/save state is always up-to-date inside the modal
+  const { data: liveRecipe } = useGetReceita(recipeProp?.id ?? 0, {
+    query: { enabled: !!recipeProp?.id && isOpen }
+  })
+  const recipe = liveRecipe ?? recipeProp
+
   const { data: comentarios = [], isLoading: comentariosLoading } = useGetComentarios(
     recipe?.id ?? 0,
     { query: { enabled: !!recipe?.id && isOpen } }
@@ -134,13 +140,16 @@ export function RecipeDetailModal({ isOpen, onClose, recipe, currentUser, onRepo
 
   if (!recipe) return null
 
+  const invalidateAll = (id: number) => {
+    queryClient.invalidateQueries({ queryKey: getGetReceitasQueryKey() })
+    queryClient.invalidateQueries({ queryKey: getGetReceitaQueryKey(id) })
+    queryClient.invalidateQueries({ queryKey: getGetFavoritosQueryKey() })
+  }
+
   const handleLike = () => {
     if (!currentUser) return promptLogin()
     like({ receitaId: recipe.id }, {
-      onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: getGetReceitasQueryKey() })
-        queryClient.invalidateQueries({ queryKey: getGetReceitaQueryKey(recipe.id) })
-      }
+      onSuccess: () => invalidateAll(recipe.id)
     })
   }
 
@@ -148,15 +157,11 @@ export function RecipeDetailModal({ isOpen, onClose, recipe, currentUser, onRepo
     if (!currentUser) return promptLogin()
     if (recipe.isFavorited) {
       remFav({ receitaId: recipe.id }, {
-        onSuccess: () => {
-          queryClient.invalidateQueries({ queryKey: getGetReceitasQueryKey() })
-        }
+        onSuccess: () => invalidateAll(recipe.id)
       })
     } else {
       addFav({ data: { receitaId: recipe.id } }, {
-        onSuccess: () => {
-          queryClient.invalidateQueries({ queryKey: getGetReceitasQueryKey() })
-        }
+        onSuccess: () => invalidateAll(recipe.id)
       })
     }
   }
