@@ -4,7 +4,7 @@ import { Receita, User } from "@workspace/api-client-react/src/generated/api.sch
 import { Heart, Bookmark, Flag, MoreVertical, Edit2, Trash2 } from "lucide-react"
 import { Button } from "./ui/button"
 import { UserAvatar } from "./UserAvatar"
-import { useLikeReceita, useAddFavorito, useRemoveFavorito, getGetReceitasQueryKey } from "@workspace/api-client-react"
+import { useLikeReceita, useAddFavorito, useRemoveFavorito, getGetReceitasQueryKey, getGetFavoritosQueryKey } from "@workspace/api-client-react"
 import { useQueryClient } from "@tanstack/react-query"
 import { useToast } from "@/hooks/use-toast"
 import { motion } from "framer-motion"
@@ -42,11 +42,17 @@ export function RecipeCard({ recipe, currentUser, onClick, onEdit, onDelete, onR
     if (!currentUser) return promptLogin()
     if (recipe.isFavorited) {
       remFav({ receitaId: recipe.id }, {
-        onSuccess: () => queryClient.invalidateQueries({ queryKey: getGetReceitasQueryKey() })
+        onSuccess: () => {
+          queryClient.invalidateQueries({ queryKey: getGetReceitasQueryKey() })
+          queryClient.invalidateQueries({ queryKey: getGetFavoritosQueryKey() })
+        }
       })
     } else {
       addFav({ data: { receitaId: recipe.id } }, {
-        onSuccess: () => queryClient.invalidateQueries({ queryKey: getGetReceitasQueryKey() })
+        onSuccess: () => {
+          queryClient.invalidateQueries({ queryKey: getGetReceitasQueryKey() })
+          queryClient.invalidateQueries({ queryKey: getGetFavoritosQueryKey() })
+        }
       })
     }
   }
