@@ -27,7 +27,7 @@ async function buildReceitaQuery(userId?: number) {
       isReported: receitasTable.isReported,
       createdAt: receitasTable.createdAt,
       categoria: { id: categoriasTable.id, nome: categoriasTable.nome },
-      autor: { id: usersTable.id, nome: usersTable.nome, email: usersTable.email, papel: usersTable.papel, isBanned: usersTable.isBanned },
+      autor: { id: usersTable.id, nome: usersTable.nome, email: usersTable.email, papel: usersTable.papel, isBanned: usersTable.isBanned, photoUrl: usersTable.photoUrl },
       likeCount: sql<number>`(SELECT COUNT(*) FROM likes WHERE likes.receita_id = ${receitasTable.id})`.mapWith(Number),
     })
     .from(receitasTable)
