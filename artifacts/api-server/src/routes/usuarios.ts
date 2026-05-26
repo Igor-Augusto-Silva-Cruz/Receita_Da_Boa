@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { db, usersTable, followsTable, receitasTable } from "@workspace/db";
-import { eq, count } from "drizzle-orm";
+import { eq, count, and } from "drizzle-orm";
 import { optionalAuth } from "../middlewares/auth.js";
 import { GetUsuarioParams } from "@workspace/api-zod";
 
@@ -28,7 +28,7 @@ router.get("/:id", optionalAuth, async (req, res) => {
     let isFollowing = false;
     if (currentUserId && currentUserId !== id) {
       const [follow] = await db.select().from(followsTable)
-        .where(eq(followsTable.followerId, currentUserId))
+        .where(and(eq(followsTable.followerId, currentUserId), eq(followsTable.followingId, id)))
         .limit(1);
       isFollowing = !!follow;
     }
