@@ -1,6 +1,7 @@
-# 🍳 Receita da Boa
+# 🍳 Receita da Boa     
+[![Acessar o Site](https://img.shields.io/badge/Para%20Acessar%20o%20Site-clique%20aqui-orange?style=for-the-badge&logo=googlechrome&logoColor=white)](https://seu-site-aqui.com)
 
-Rede social de receitas em português, desenvolvida como projeto de avaliação do **Curso de Tecnologia da FATEC Praia Grande**, com foco em integração full-stack e modelagem de dados relacional.
+Receita da Boa é uma Rede social com o intuido de compartilhamento de receitas entre amantes da culinaria, desenvolvida como projeto de avaliação do **Curso de Analise e Desenvolvimento de Sistemas da FATEC Praia Grande**, com foco em integração full-stack e modelagem de dados relacional.
 
 Usuários publicam, curtem, salvam e comentam receitas, seguem outros chefs e recebem notificações. Administradores têm acesso a um painel de moderação completo.
 
