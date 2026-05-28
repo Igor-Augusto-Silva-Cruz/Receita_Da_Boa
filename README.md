@@ -72,6 +72,39 @@ Usuários publicam, curtem, salvam e comentam receitas, seguem outros chefs e re
 
 ---
 
+## Arquitetura
+
+```mermaid
+graph TB
+    subgraph Cliente["🖥️ Cliente (Navegador)"]
+        FE["React + Vite + TypeScript\nTanStack Query · Wouter · Tailwind CSS"]
+    end
+
+    subgraph Replit["☁️ Replit"]
+        subgraph API["🟢 API Server — Node.js + Express"]
+            MW["Middleware JWT\nrequireAuth / optionalAuth"]
+            ROUTES["Rotas REST\n/auth · /receitas · /usuarios\n/likes · /follows · /favoritos\n/comentarios · /reports\n/notificacoes · /admin"]
+            ORM["Drizzle ORM"]
+        end
+        PG[("🗄️ PostgreSQL")]
+        GCS["📦 Object Storage\nImagens das receitas"]
+    end
+
+    subgraph Google["🔵 Google"]
+        OAUTH["Google OAuth 2.0"]
+    end
+
+    FE -->|"REST + JWT (Bearer)"| ROUTES
+    FE -->|"PUT — upload direto\nURL assinada"| GCS
+    ROUTES --> MW --> ROUTES
+    ROUTES --> ORM --> PG
+    ROUTES -->|"Gera URL assinada\n(15 min)"| GCS
+    FE -->|"Redirect OAuth"| OAUTH
+    OAUTH -->|"Callback com perfil"| MW
+```
+
+---
+
 ## Estrutura do monorepo
 
 ```
@@ -152,18 +185,25 @@ O frontend roda em `http://localhost:5173` e o backend em `http://localhost:3000
 
 ## Fluxo de autenticação
 
-```
-Usuário clica "Entrar com Google"
-        ↓
-GET /api/auth/google  →  Google OAuth consent screen
-        ↓
-GET /api/auth/google/callback
-        ↓  (Passport verifica ou cria o usuário no banco)
-Redireciona para /?token=<JWT>
-        ↓
-Frontend salva JWT no localStorage ("receita_token")
-        ↓
-Todas as requisições: Authorization: Bearer <JWT>
+```mermaid
+sequenceDiagram
+    participant U as Usuário
+    participant FE as Frontend
+    participant API as API Server
+    participant G as Google OAuth
+    participant DB as PostgreSQL
+
+    U->>FE: Clica em "Entrar com Google"
+    FE->>API: GET /api/auth/google
+    API->>G: Redirect OAuth (scope: profile, email)
+    G->>U: Tela de seleção de conta
+    U->>G: Seleciona conta
+    G->>API: Callback com perfil do usuário
+    API->>DB: Busca ou cria usuário por googleId
+    API->>FE: Redirect /?token=JWT
+    FE->>FE: Salva JWT no localStorage
+    FE->>API: GET /api/auth/me (Authorization: Bearer JWT)
+    API->>FE: Dados do usuário logado
 ```
 
 > O primeiro usuário cadastrado recebe automaticamente o papel `adm`.
@@ -249,38 +289,95 @@ Base: `/api`
 
 Schema gerenciado via **Drizzle ORM** em `lib/db/src/schema/index.ts`.
 
-### Tabelas
+### Diagrama Entidade-Relacionamento
 
-```
-users
-  id · nome · email · googleId · papel (usuario|adm)
-  isBanned · photoUrl · bio
+```mermaid
+erDiagram
+    USERS {
+        int id PK
+        text nome
+        text email UK
+        text google_id UK
+        enum papel "usuario | adm"
+        bool is_banned
+        text photo_url
+        text bio
+    }
+    CATEGORIAS {
+        int id PK
+        text nome
+    }
+    RECEITAS {
+        int id PK
+        text titulo
+        text descricao
+        text ingredientes
+        text instrucoes
+        text url_imagem
+        int categoria_id FK
+        int autor_id FK
+        bool is_reported
+        timestamp created_at
+    }
+    LIKES {
+        int id PK
+        int user_id FK
+        int receita_id FK
+    }
+    FAVORITOS {
+        int id PK
+        int user_id FK
+        int receita_id FK
+    }
+    FOLLOWS {
+        int id PK
+        int follower_id FK
+        int following_id FK
+    }
+    COMMENTS {
+        int id PK
+        int user_id FK
+        int receita_id FK
+        text texto
+        bool is_reported
+        timestamp created_at
+    }
+    REPORTS {
+        int id PK
+        int user_id FK
+        int receita_id FK
+        int comentario_id FK
+        text motivo
+        timestamp created_at
+    }
+    NOTIFICATIONS {
+        int id PK
+        int user_id FK
+        int actor_id FK
+        enum type "like | comment"
+        int receita_id FK
+        int comentario_id FK
+        bool is_read
+        timestamp created_at
+    }
 
-receitas
-  id · titulo · descricao · ingredientes · instrucoes
-  urlImagem · categoriaId · autorId · isReported · createdAt
-
-categorias
-  id · nome
-
-comments
-  id · userId · receitaId · texto · isReported · createdAt
-
-likes
-  userId · receitaId  (chave primária composta)
-
-favoritos
-  userId · receitaId  (chave primária composta)
-
-follows
-  followerId · followingId  (chave primária composta)
-
-reports
-  id · userId · receitaId? · comentarioId? · motivo · createdAt
-
-notifications
-  id · userId · actorId · type (like|comment)
-  receitaId · comentarioId · isRead
+    USERS ||--o{ RECEITAS        : "publica"
+    USERS ||--o{ LIKES           : "curte"
+    USERS ||--o{ FAVORITOS       : "salva"
+    USERS ||--o{ COMMENTS        : "comenta"
+    USERS ||--o{ REPORTS         : "denuncia"
+    USERS ||--o{ FOLLOWS         : "segue (follower)"
+    USERS ||--o{ FOLLOWS         : "é seguido (following)"
+    USERS ||--o{ NOTIFICATIONS   : "recebe"
+    USERS ||--o{ NOTIFICATIONS   : "gera (actor)"
+    CATEGORIAS ||--o{ RECEITAS   : "classifica"
+    RECEITAS ||--o{ LIKES        : "recebe curtidas"
+    RECEITAS ||--o{ FAVORITOS    : "é salva"
+    RECEITAS ||--o{ COMMENTS     : "recebe comentários"
+    RECEITAS ||--o{ REPORTS      : "é denunciada"
+    RECEITAS ||--o{ NOTIFICATIONS : "dispara notificação"
+    COMMENTS ||--o{ REPORTS      : "é denunciado"
+    COMMENTS ||--o{ NOTIFICATIONS : "dispara notificação"
 ```
 
 ### Comandos úteis
